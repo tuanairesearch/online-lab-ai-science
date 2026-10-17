@@ -1,0 +1,14 @@
+{
+  "name": "Phòng thí nghiệm KHTN",
+  "short_name": "Lab KHTN",
+  "description": "Mô phỏng thí nghiệm KHTN THCS theo SGK, có trợ lý AI hỏi mồi.",
+  "lang": "vi",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0A101C",
+  "theme_color": "#0A101C",
+  "icons": [
+    { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

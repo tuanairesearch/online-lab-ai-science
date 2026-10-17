@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phòng thí nghiệm KHTN</title>
+<meta name="description" content="Mô phỏng thí nghiệm Khoa học tự nhiên THCS theo SGK, có trợ lý AI hỏi mồi. Dành cho trường thiếu thiết bị thí nghiệm.">
+<meta name="theme-color" content="#0A101C">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="/assets/css/lab.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <span class="eyebrow">Khoa học tự nhiên THCS · Kết nối tri thức</span>
+    <h1>Phòng thí nghiệm KHTN</h1>
+    <p class="lead">Mô phỏng các thí nghiệm trong SGK cho lớp học thiếu thiết bị. Mỗi thí nghiệm chạy theo từng bước, có trợ lý AI hỏi mồi giữa chừng. Học sinh chọn sai thì thí nghiệm chạy đúng theo lựa chọn sai, để các em tự thấy và tự sửa.</p>
+  </header>
+
+  <section aria-labelledby="listHead" style="display:grid;gap:14px">
+    <h2 id="listHead">Chọn thí nghiệm</h2>
+    <div class="lessons" id="lessons"></div>
+  </section>
+
+  <section class="home-info" aria-label="Giới thiệu">
+    <div class="card"><h2>Chạy theo bước SGK</h2><p>Bấm "Chạy 1 lượt" để xem cả thí nghiệm, hoặc đi từng bước bằng bút trình chiếu khi chiếu lên tivi.</p></div>
+    <div class="card"><h2>Trợ lý AI hỏi mồi</h2><p>Giữa thí nghiệm, trợ lý hỏi một câu trắc nghiệm. Chọn đáp án nào, thí nghiệm chạy theo đáp án đó.</p></div>
+    <div class="card"><h2>Chạy khi mất mạng</h2><p>Sau lần mở đầu tiên, mô phỏng và câu hỏi mồi vẫn dùng được khi không có mạng. Chỉ phần hỏi AI tự do cần mạng.</p></div>
+  </section>
+
+  <footer class="page">Mô phỏng phục vụ dạy học. Nội dung các bước bám theo SGK Khoa học tự nhiên (Kết nối tri thức).</footer>
+</div>
+<script type="module">
+  import { LESSONS } from '/assets/js/lessons.js';
+  import { esc, registerOffline } from '/assets/js/engine.js';
+  document.getElementById('lessons').innerHTML = LESSONS.map(l => `
+    <a class="lesson-card" href="${l.href}">
+      ${l.thumb || ''}
+      <span class="meta">${esc(l.grade)} · ${esc(l.lesson)}</span>
+      <h2>${esc(l.title)}</h2>
+      <p>${esc(l.desc)}</p>
+    </a>`).join('');
+  registerOffline();
+</script>
+</body>
+</html>
