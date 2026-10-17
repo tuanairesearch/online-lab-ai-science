@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/vat-li", "destination": "/subject.html" },
+    { "source": "/hoa-hoc", "destination": "/subject.html" },
+    { "source": "/sinh-hoc", "destination": "/subject.html" }
+  ]
+}

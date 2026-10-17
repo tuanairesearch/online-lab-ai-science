@@ -33,24 +33,29 @@ function makeGraphics(canvas, view){
   g.text = (t, x, y, { color = g.C['stage-ink'], size = g.fs(), weight = 500, align = 'center', base = 'middle', mono = false } = {}) => {
     ctx.fillStyle = color; ctx.font = g.font(size, weight, mono); ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(t, x, y);
   };
-  // Vẽ một đường gấp khúc (đơn vị cm) tới tỉ lệ p (0..1), có mũi tên chỉ chiều truyền
-  g.path = (pts, p, { color = g.C.beam, width = 2.2, dash = null, alpha = 1, arrows = true, glow = true } = {}) => {
-    if (p <= 0) return;
+  // Vẽ một đường gấp khúc (đơn vị cm) từ tỉ lệ from tới tỉ lệ p (0..1), có mũi tên chỉ chiều truyền.
+  // Tăng p: tia chạy ra; tăng from: đuôi tia chạy theo, ánh sáng "chạy đi" hết.
+  g.path = (pts, p, { color = g.C.beam, width = 2.2, dash = null, alpha = 1, arrows = true, glow = true, from = 0 } = {}) => {
+    if (p <= 0 || from >= p) return;
     const P = pts.map(([x, y]) => [g.X(x), g.Y(y)]);
     const L = []; let total = 0;
     for (let i = 1; i < P.length; i++){ const l = Math.hypot(P[i][0] - P[i-1][0], P[i][1] - P[i-1][1]); L.push(l); total += l; }
-    let remain = total * Math.min(1, p);
+    const a = total * Math.max(0, from), b = total * Math.min(1, p);
     ctx.save(); ctx.globalAlpha *= alpha; ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     if (dash) ctx.setLineDash(dash);
     if (glow){ ctx.shadowColor = color; ctx.shadowBlur = 9; }
-    ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+    ctx.beginPath();
     const heads = [];
-    for (let i = 1; i < P.length && remain > 0; i++){
-      const l = L[i-1]; if (l <= 0) continue;
-      const f = Math.min(1, remain / l);
-      ctx.lineTo(P[i-1][0] + (P[i][0] - P[i-1][0]) * f, P[i-1][1] + (P[i][1] - P[i-1][1]) * f);
-      if (arrows && f > 0.6 && l > 34) heads.push([P[i-1], P[i]]);
-      remain -= l;
+    let acc = 0, started = false;
+    for (let i = 1; i < P.length; i++){
+      const l = L[i-1], s0 = acc; acc += l;
+      if (l <= 0 || acc <= a) continue;
+      if (s0 >= b) break;
+      const t0 = Math.max(0, (a - s0) / l), t1 = Math.min(1, (b - s0) / l);
+      const at = t => [P[i-1][0] + (P[i][0] - P[i-1][0]) * t, P[i-1][1] + (P[i][1] - P[i-1][1]) * t];
+      if (!started){ const s = at(t0); ctx.moveTo(s[0], s[1]); started = true; }
+      const e = at(t1); ctx.lineTo(e[0], e[1]);
+      if (arrows && t1 > 0.6 && t0 < 0.5 && l > 34) heads.push([P[i-1], P[i]]);
     }
     ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
     for (const [a, b] of heads){
@@ -109,19 +114,29 @@ function template(L){
         <div class="cap-text" data-el="capText"></div>
       </div>
       <div class="controls">
+        ${L.free ? `<div class="mode-seg" role="group" aria-label="Chế độ thí nghiệm"><button type="button" data-mode="steps" aria-pressed="true">Theo bước SGK</button><button type="button" data-mode="free" aria-pressed="false">Tự do</button></div>` : ''}
         <button class="cbtn primary" data-el="btnPlay" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path data-el="playIcon" d="M4 2.5v11l9-5.5z"/></svg><span data-el="playLabel">Chạy 1 lượt</span></button>
         <button class="cbtn" data-el="btnPrev" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h2v10H3zM13 3v10L6 8z"/></svg>Bước trước</button>
         <button class="cbtn" data-el="btnNext" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11 3h2v10h-2zM3 3v10l7-5z"/></svg>Bước tiếp</button>
         <button class="cbtn" data-el="btnReset" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2a6 6 0 1 1-5.6 3.9l1.8.7A4 4 0 1 0 8 4v2L4.5 3 8 0z"/></svg>Làm lại</button>
         <span class="spacer"></span>
-        <label class="switch"><input type="checkbox" data-el="askToggle" checked><span></span>Câu hỏi mồi</label>
+        <label class="switch" data-el="askWrap"><input type="checkbox" data-el="askToggle" checked><span></span>Câu hỏi mồi</label>
         <button class="cbtn" data-el="btnFull" type="button" aria-label="Toàn màn hình" title="Toàn màn hình"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 2h5v2H4v3H2zM14 2v5h-2V4H9V2zM2 14V9h2v3h3v2zM14 14H9v-2h3V9h2z"/></svg></button>
       </div>
     </section>
-    <aside class="steps" aria-labelledby="stepsHead">
-      <h2 id="stepsHead">Các bước thí nghiệm</h2>
-      <p class="note">Bấm vào một bước để chạy lại bước đó. Bước có dấu <span style="color:var(--accent);font-family:var(--f-mono)">AI hỏi</span> sẽ có câu hỏi mồi.</p>
-      <ol data-el="stepList"></ol>
+    <aside class="steps">
+      <div class="side-box" data-el="stepsBox">
+        <h2>Các bước thí nghiệm</h2>
+        <p class="note">Bấm vào một bước để chạy lại bước đó. Bước có dấu <span style="color:var(--accent);font-family:var(--f-mono)">AI hỏi</span> sẽ có câu hỏi mồi.</p>
+        <ol data-el="stepList"></ol>
+      </div>
+      ${L.free ? `<div class="side-box" data-el="freeBox" hidden>
+        <h2>Bảng điều chỉnh</h2>
+        <p class="note">${esc(L.free.hint || 'Kéo các dụng cụ ngay trên giá, hoặc chỉnh ở bảng này.')}</p>
+        <div data-el="freeCtl"></div>
+        <div class="row-btns" data-el="freeActs"></div>
+        <p class="free-msg" data-el="freeMsg" aria-live="polite"></p>
+      </div>` : ''}
     </aside>
   </div>
   <div class="teacher">
@@ -140,7 +155,8 @@ function template(L){
         <li>Chiếu lên tivi. <b>Chạy 1 lượt</b> sẽ dừng ở mỗi câu hỏi mồi; tắt <b>Câu hỏi mồi</b> khi muốn chiếu nhanh.</li>
         <li>Dùng bút trình chiếu hoặc phím <kbd>←</kbd> <kbd>→</kbd> để chuyển bước.</li>
         <li>Cả lớp giơ tay chọn đáp án, thầy cô bấm phím <kbd>A</kbd>–<kbd>D</kbd> theo đáp án được nhiều bạn chọn nhất.</li>
-        <li>Sau lần mở đầu tiên, mô phỏng và câu hỏi mồi chạy được cả khi mất mạng. Chỉ ô hỏi tự do mới cần mạng.</li>
+        ${L.free ? '<li>Chế độ <b>Tự do</b>: học sinh tự kéo dụng cụ trên giá và chỉnh thông số. Trợ lý AI biết các thông số đang đặt.</li>' : ''}
+        <li>Cần có mạng để mở trang. Nếu mất mạng giữa giờ, mô phỏng và câu hỏi mồi vẫn chạy tiếp (đừng tải lại trang); chỉ ô hỏi tự do tạm tắt.</li>
       </ul>
     </section>
   </div>
@@ -404,7 +420,7 @@ export function mountLab(root, L){
   el('btnPlay').addEventListener('click', play);
   el('btnNext').addEventListener('click', () => { playing = false; if (cur < L.steps.length - 1) goTo(cur + 1); });
   el('btnPrev').addEventListener('click', () => { playing = false; if (cur > 0) goTo(cur - 1); });
-  el('btnReset').addEventListener('click', reset);
+  el('btnReset').addEventListener('click', () => { if (freeOn){ Object.assign(P, FR.defaults); setParams({}); } else reset(); });
   el('askToggle').addEventListener('change', e => { askOn = e.target.checked; });
   el('btnFull').addEventListener('click', () => {
     const lab = el('lab');
@@ -423,9 +439,126 @@ export function mountLab(root, L){
       if (opt >= 0 && bPanel.querySelector('.opt')){ e.preventDefault(); resolvePending(opt); return; }
       if (e.key === 'Enter' && bPanel.querySelector('[data-act="go"]')){ e.preventDefault(); resolvePending('go'); return; }
     }
+    if (freeOn) return;
     if (e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); el('btnNext').click(); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); el('btnPrev').click(); }
   });
+
+  /* chế độ tự do: mọi thông số nằm trong P (khai báo ở L.free.params).
+     P là nguồn sự thật duy nhất cho cảnh vẽ, bảng điều chỉnh và trạng thái gửi trợ lý AI. */
+  const FR = L.free || null;
+  const P = FR ? { ...FR.defaults } : {};
+  let freeOn = false, dragKey = null;
+  const visible = p => !p.show || p.show(P);
+  const paramOf = k => FR.params.find(p => p.key === k);
+  function snap(p, v){
+    if (p.type === 'toggle') return !!v;
+    if (p.type !== 'range') return v;
+    v = Math.min(p.max, Math.max(p.min, Number(v)));
+    return Number((Math.round((v - p.min) / p.step) * p.step + p.min).toFixed(3));
+  }
+  function paramText(p){
+    const v = P[p.key];
+    if (p.type === 'range') return fmt(v) + (p.unit ? ' ' + p.unit : '');
+    if (p.type === 'choice') return (p.options.find(o => o.value === v) || {}).label || String(v);
+    return v ? 'bật' : 'tắt';
+  }
+  function freeCaption(){
+    el('capStep').textContent = 'Tự do';
+    el('capTitle').textContent = FR.title;
+    el('capText').innerHTML = '<span class="k">Quan sát:</span> ' + esc(FR.observe(S, P));
+  }
+  function syncFree(){
+    el('freeCtl').querySelectorAll('[data-key]').forEach(row => {
+      const p = paramOf(row.dataset.key);
+      row.hidden = !visible(p);
+      if (row.classList.contains('fc-group')) return;
+      if (p.type === 'range'){
+        const i = row.querySelector('input'); if (Number(i.value) !== P[p.key]) i.value = P[p.key];
+        row.querySelector('output').textContent = paramText(p);
+      } else if (p.type === 'choice') row.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === P[p.key])));
+      else row.querySelector('input').checked = !!P[p.key];
+    });
+  }
+  // Đổi cảnh tới trạng thái của P. Có FR.animate thì chạy hoạt ảnh (hủy được như các bước SGK);
+  // trong lúc hoạt ảnh đang chạy, thay đổi chỉ gồm thanh trượt (kéo vật, màn...) thì đặt ngay hình học
+  // bằng FR.place để hình theo tay mà không làm đứt hoạt ảnh.
+  let freeBusy = false;
+  async function runFree(){
+    const id = ++runId; freeBusy = true;
+    const h = { id, S, tw: (props, ms) => tw(props, ms, id), wait: ms => wait(ms, id) };
+    try { await FR.animate(h, P); } catch (e){ if (e !== CANCEL) console.error(e); }
+    finally { if (id === runId) freeBusy = false; }
+  }
+  function setParams(patch, keepMsg){
+    if (!patch) return;
+    let onlyRange = Object.keys(patch).length > 0;
+    for (const k in patch){ const p = paramOf(k); if (!p) continue; P[k] = snap(p, patch[k]); if (p.type !== 'range') onlyRange = false; }
+    if (!FR.animate) Object.assign(S, FR.target(P));
+    else if (freeBusy && onlyRange && FR.place) FR.place(S, P);
+    else runFree();
+    syncFree(); freeCaption();
+    if (!keepMsg) el('freeMsg').textContent = '';
+  }
+  function buildFree(){
+    const box = el('freeCtl'); let group = null;
+    FR.params.forEach(p => {
+      if (p.group && p.group !== group){
+        const h = document.createElement('p'); h.className = 'fc-group'; h.dataset.key = p.key; h.textContent = p.group; box.appendChild(h);
+      }
+      group = p.group;
+      const row = document.createElement('div'); row.className = 'fc'; row.dataset.key = p.key;
+      const id = 'fc-' + p.key;
+      if (p.type === 'range'){
+        row.innerHTML = `<div class="fc-head"><label for="${id}">${esc(p.label)}</label><output for="${id}"></output></div><input type="range" id="${id}" min="${p.min}" max="${p.max}" step="${p.step}">`;
+        row.querySelector('input').addEventListener('input', e => setParams({ [p.key]: e.target.value }));
+      } else if (p.type === 'choice'){
+        row.innerHTML = `<div class="fc-head"><span>${esc(p.label)}</span></div><div class="fc-seg" role="group" aria-label="${esc(p.label)}">` +
+          p.options.map(o => `<button type="button" data-v="${esc(o.value)}">${esc(o.label)}</button>`).join('') + '</div>';
+        row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setParams({ [p.key]: b.dataset.v })));
+      } else {
+        row.innerHTML = `<label class="fc-tog"><input type="checkbox" id="${id}">${esc(p.label)}</label>`;
+        row.querySelector('input').addEventListener('change', e => setParams({ [p.key]: e.target.checked }));
+      }
+      box.appendChild(row);
+    });
+    (FR.actions || []).forEach(a => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'pbtn'; b.textContent = a.label;
+      b.addEventListener('click', () => { const r = a.run(S, P) || {}; if (r.patch) setParams(r.patch, true); el('freeMsg').textContent = r.msg || ''; });
+      el('freeActs').appendChild(b);
+    });
+  }
+  function setMode(free){
+    if (!FR || free === freeOn) return;
+    playing = false; cancelAll(); freeOn = free; dragKey = null; freeBusy = false;
+    el('lab').classList.toggle('free', free);
+    el('stepsBox').hidden = free; el('freeBox').hidden = !free;
+    ['btnPlay', 'btnPrev', 'btnNext', 'askWrap'].forEach(k => { el(k).hidden = free; });
+    root.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.mode === 'free') === free)));
+    if (free){ L.base(S); if (FR.start) FR.start(S); setParams({}); } else reset();
+    renderChips(); updateNav();
+  }
+  if (FR){
+    // kéo dụng cụ trên giá: đổi tọa độ chuột sang đơn vị cảnh, module quyết định kéo cái gì
+    const toScene = e => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left - g.ox) / g.sc, y: (g.oy - (e.clientY - r.top)) / g.sc }; };
+    const tol = () => Math.max(1.2, 16 / g.sc);
+    canvas.addEventListener('pointerdown', e => {
+      if (!freeOn) return;
+      const p = toScene(e); dragKey = FR.drag.hit(S, P, p.x, p.y, tol());
+      if (!dragKey) return;
+      e.preventDefault(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing';
+    });
+    canvas.addEventListener('pointermove', e => {
+      if (!freeOn) return;
+      const p = toScene(e);
+      if (dragKey) setParams(FR.drag.move(dragKey, p.x, p.y, S, P));
+      else canvas.style.cursor = FR.drag.hit(S, P, p.x, p.y, tol()) ? 'grab' : '';
+    });
+    const endDrag = () => { if (dragKey){ dragKey = null; canvas.style.cursor = ''; } };
+    canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
+    root.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode === 'free')));
+    buildFree();
+  }
 
   /* trợ lý AI: gọi /api/ask (Gemini, key giữ ở máy chủ) */
   const turns = [];
@@ -440,7 +573,7 @@ export function mountLab(root, L){
     chatLog.scrollTop = chatLog.scrollHeight;
   }
   appendMsg('ai', 'Chào em! Em có thắc mắc gì về thí nghiệm thì hỏi mình nhé. Mình biết em đang ở bước nào.');
-  function currentChips(){ return cur >= 0 ? (L.steps[cur].chips || []) : (L.startChips || []); }
+  function currentChips(){ return freeOn ? (FR.chips || []) : cur >= 0 ? (L.steps[cur].chips || []) : (L.startChips || []); }
   function renderChips(){
     const box = el('chips'); box.innerHTML = '';
     currentChips().forEach(c => {
@@ -454,8 +587,16 @@ export function mountLab(root, L){
   }
   function describeState(){
     const lines = [];
+    if (freeOn){
+      lines.push('Học sinh đang ở chế độ TỰ DO: tự lắp và chỉnh thí nghiệm, không theo các bước SGK.');
+      lines.push('Thông số đang đặt: ' + FR.params.filter(visible).map(p => `${p.label}: ${paramText(p)}`).join('; ') + '.');
+      lines.push(...(L.describe ? L.describe(FR.target(P)) : []));   // trạng thái đích, không phải khung hình giữa hoạt ảnh
+      lines.push('Điều đang quan sát được: ' + FR.observe(S, P));
+      return lines.join('\n');
+    }
     const st = cur >= 0 ? L.steps[cur] : null;
     lines.push(st ? `Bước ${cur + 1}/${L.steps.length}: ${st.title}. Hướng dẫn: ${st.sgk}` : 'Thí nghiệm chưa bắt đầu.');
+    if (done.size) lines.push('Các bước đã làm xong: ' + [...done].sort((a, b) => a - b).map(i => i + 1).join(', ') + '.');
     if (st && done.has(cur)) lines.push('Điều vừa quan sát được: ' + st.note);
     lines.push(...(L.describe ? L.describe(S) : []));
     if (pendingQ) lines.push(`Câu hỏi trợ lý đang hỏi học sinh: "${pendingQ.text}" Các lựa chọn: ${pendingQ.opts.map((o, i) => LETTERS[i] + '. ' + o).join('; ')}.`);
@@ -503,11 +644,4 @@ export function mountLab(root, L){
   L.base(S); L.rest(S);
   setCaption(-1); renderSteps(); renderStats(); updateNav(); renderChips();
   requestAnimationFrame(frame);
-}
-
-/* đăng ký service worker để chạy offline */
-export function registerOffline(){
-  if ('serviceWorker' in navigator && location.protocol !== 'file:'){
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
-  }
 }

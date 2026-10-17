@@ -17,10 +17,9 @@
 <div id="app"></div>
 <noscript><p style="padding:16px">Trang này cần bật JavaScript để chạy mô phỏng.</p></noscript>
 <script type="module">
-  import { mountLab, registerOffline } from '/assets/js/engine.js';
+  import { mountLab } from '/assets/js/engine.js';
   import lesson from '/assets/js/lessons/thau-kinh.js';
   mountLab(document.getElementById('app'), lesson);
-  registerOffline();
 </script>
 </body>
 </html>

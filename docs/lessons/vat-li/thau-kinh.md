@@ -30,3 +30,25 @@
 2. **Đầu bước 3** – "Muốn chùm tia ló loe rộng ra, chọn dụng cụ nào?" A. Rìa mỏng · **B. Rìa dày** · C. Kính phẳng · D. Gương phẳng. Mỗi đáp án → đặt dụng cụ đó lên giá và chiếu chùm sáng.
 3. **Đầu bước 5** – "Muốn ảnh trên màn to hơn vật, đặt vật cách thấu kính bao nhiêu?" A. 30 cm · B. 20 cm · **C. 15 cm** · D. 5 cm. Mỗi đáp án → dời vật tới đó, màn tự tìm ảnh (5 cm: không tìm được).
 4. **Đầu bước 7** – "Thấu kính phân kì, vật 30 cm: dịch màn tới đâu thì hứng được ảnh rõ?" A. 5 cm · B. 15 cm · C. 30 cm · **D. Không vị trí nào**. Mỗi đáp án → dời màn tới đó (chỉ có vệt sáng mờ); D → màn quét hết, hiện ảnh ảo nét đứt.
+
+## Chế độ tự do (đã dựng, giáo viên duyệt lại)
+Học sinh tự lắp thí nghiệm, không theo bước SGK. Không có câu hỏi mồi, không ghi số liệu.
+
+| Thông số | Giá trị |
+|---|---|
+| Thấu kính | Hội tụ (rìa mỏng) / Phân kì (rìa dày) / Không đặt (ánh sáng truyền thẳng, không tạo ảnh) |
+| Tiêu cự f | 5–15 cm (bước 1 cm) |
+| Nguồn sáng | Vật sáng AB / Đèn chiếu chùm tia song song với trục chính / Không có |
+| Vật cách thấu kính d | 2–36 cm (bước 0,5 cm), kéo được trên giá |
+| Chiều cao vật h | 1–6 cm |
+| Đèn cách thấu kính | 6–32 cm (chỉ đổi vị trí vẽ, chùm vẫn song song), kéo được |
+| Màn chắn | bật/tắt; cách thấu kính 1–36 cm, kéo được |
+| Tiêu điểm F, F' | hiện/ẩn |
+| Tia sáng đặc biệt | tia song song với trục chính; tia qua quang tâm O; tia qua tiêu điểm F (với thấu kính phân kì: tia hướng tới F'), mỗi tia bật/tắt riêng |
+
+- Ảnh tính bằng công thức thấu kính mỏng (như trên). Dòng "Quan sát" phân loại vị trí vật: ngoài 2f / đúng 2f / giữa f và 2f / tại F / trong khoảng tiêu cự (thấu kính hội tụ); thấu kính phân kì luôn cho ảnh ảo, cùng chiều, nhỏ hơn vật.
+- Vật đặt đúng tại F: các tia ló song song, không tạo ảnh.
+- Chùm song song + màn: vệt sáng rộng 8·|1 − s/f| cm (chùm rộng 8 cm); dưới 0,35 cm thì gọi là "điểm sáng" (màn ở F').
+- Nút "Tìm ảnh rõ nét trên màn": dịch màn tới ảnh thật (hoặc tới F' khi dùng chùm song song); ảnh ảo / ảnh quá 36 cm / vật tại F thì giải thích vì sao không hứng được.
+- Câu gợi ý (trả lời soạn sẵn): "Làm sao để ảnh to hơn vật?", "Vì sao màn không hứng được ảnh?" – xem `free.chips` trong module.
+- Hoạt ảnh khi đổi thấu kính / nguồn sáng: ánh sáng cũ chạy hết khỏi giá → thấu kính cũ mờ đi, thấu kính mới hiện dần → nguồn sáng mới hiện dần → tia sáng chạy ra từ nguồn, đi theo thấu kính đang đặt → ảnh ảo (nếu có) hiện dần. Kéo dụng cụ / thanh trượt thì hình đổi ngay.

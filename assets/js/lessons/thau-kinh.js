@@ -9,21 +9,25 @@
 //   readout(S), describe(S) – chữ hiển thị góc trái và mô tả gửi cho trợ lý AI
 //   steps     – các bước theo SGK; run(h) dùng h.tw / h.wait / h.ask('id') / h.showObs()
 //   questions – câu hỏi mồi; sim(h, lựa chọn) chạy thí nghiệm theo đúng lựa chọn của học sinh
+//   free      – (không bắt buộc) chế độ tự do: params là "cấu hình" thông số, apply(S, P) đặt cảnh theo P,
+//               observe(S, P) nêu điều quan sát được, drag kéo dụng cụ trên giá
 
 import { fmt } from '../engine.js';
 
-const F = 10, HOBJ = 3, LH = 7;
+const F0 = 10, H0 = 3, LH = 7;   // tiêu cự, chiều cao vật mặc định (cm); nửa chiều cao thấu kính
 const LENS_NAME = { conv:'thấu kính hội tụ (rìa mỏng)', div:'thấu kính phân kì (rìa dày)', plate:'tấm kính phẳng', mirror:'gương phẳng', none:'chưa đặt dụng cụ' };
 const LENS_LABEL = { conv:'Thấu kính hội tụ', div:'Thấu kính phân kì', plate:'Tấm kính phẳng', mirror:'Gương phẳng', none:'' };
 const INSET_NAME = { reflect:'Phản xạ ánh sáng', refract:'Khúc xạ ánh sáng', tir:'Phản xạ toàn phần', disperse:'Tán sắc ánh sáng' };
 
 /* ---------- quang học ---------- */
-const lensF = S => S.lens === 'div' ? -F : F;
+const lensF = S => S.lens === 'div' ? -S.f : S.f;
+// độ rộng vệt sáng của chùm tia song song (rộng 8 cm) trên màn đặt cách thấu kính S.s
+const beamWidth = S => S.lens === 'none' ? 8 : 8 * Math.abs(1 - S.s / lensF(S));
 function imageInfo(S){
   if (S.lens !== 'conv' && S.lens !== 'div') return null;
   const fL = lensF(S), d = S.d;
   if (Math.abs(d - fL) < 0.05) return { atInfinity:true };
-  const dp = d * fL / (d - fL), hp = -HOBJ * dp / d, ratio = Math.abs(hp) / HOBJ;
+  const dp = d * fL / (d - fL), hp = -S.h * dp / d, ratio = Math.abs(hp) / S.h;
   return { dp, hp, real: dp > 0, orient: hp < 0 ? 'ngược chiều' : 'cùng chiều',
     size: ratio > 1.04 ? 'lớn hơn vật' : ratio < 0.96 ? 'nhỏ hơn vật' : 'bằng vật', far: Math.abs(dp) > 150 };
 }
@@ -61,28 +65,31 @@ function drawAxis(){
 }
 function drawLamp(){
   if (S.lampA <= 0.01) return;
-  const { ctx, X, Y, C, sc } = g;
+  const { ctx, X, Y, C, sc } = g, x = S.lampX;
   ctx.save(); ctx.globalAlpha = S.lampA;
-  g.rr(X(-36), Y(5.5), 3.7 * sc, 11 * sc, 6); ctx.fillStyle = C['stage-2']; ctx.fill(); ctx.strokeStyle = C['stage-line']; ctx.lineWidth = 1.5; ctx.stroke();
+  g.rr(X(x - 3.6), Y(5.5), 3.7 * sc, 11 * sc, 6); ctx.fillStyle = C['stage-2']; ctx.fill(); ctx.strokeStyle = C['stage-line']; ctx.lineWidth = 1.5; ctx.stroke();
   ctx.strokeStyle = C.beam; ctx.lineWidth = 3; ctx.shadowColor = C.beam; ctx.shadowBlur = 12;
-  ctx.beginPath(); ctx.moveTo(X(-32.4), Y(4.6)); ctx.lineTo(X(-32.4), Y(-4.6)); ctx.stroke(); ctx.shadowBlur = 0;
-  g.text('Đèn', X(-34.2), Y(-7.3), { color: C['stage-muted'], size: g.fs() - 1 });
+  ctx.beginPath(); ctx.moveTo(X(x), Y(4.6)); ctx.lineTo(X(x), Y(-4.6)); ctx.stroke(); ctx.shadowBlur = 0;
+  g.text('Đèn', X(x - 1.8), Y(-7.3), { color: C['stage-muted'], size: g.fs() - 1 });
   ctx.restore();
 }
 function drawBeam(){
   if (S.beam <= 0 || S.lampA <= 0.01) return;
+  const x0 = S.lampX, f = S.f;
+  const endX = (S.lens === 'conv' || S.lens === 'div' || S.lens === 'none') && S.screenA > 0.5 ? S.s : 37;   // có màn thì tia dừng ở màn
   for (const y0 of [-4, -2, 0, 2, 4]){
     let pts;
     switch (S.lens){
-      case 'conv': pts = [[-32.4, y0], [0, y0], [37, y0 * (1 - 37 / F)]]; break;
-      case 'div': pts = [[-32.4, y0], [0, y0], [37, y0 * (1 + 37 / F)]]; break;
-      case 'plate': pts = [[-32.4, y0], [37, y0]]; break;
-      case 'mirror': pts = [[-32.4, y0], [-0.25, y0], [-32.4, y0 + 0.55]]; break;
-      default: pts = [[-32.4, y0], [-1.4, y0]];
+      case 'conv': pts = [[x0, y0], [0, y0], [endX, y0 * (1 - endX / f)]]; break;
+      case 'div': pts = [[x0, y0], [0, y0], [endX, y0 * (1 + endX / f)]]; break;
+      case 'plate': pts = [[x0, y0], [37, y0]]; break;
+      case 'mirror': pts = [[x0, y0], [-0.25, y0], [x0, y0 + 0.55]]; break;
+      // chưa đặt dụng cụ: tự do thì ánh sáng truyền thẳng; bước SGK thì dừng ở chỗ trống trên giá
+      default: pts = S.handles ? [[x0, y0], [endX, y0]] : [[x0, y0], [-1.4, y0]];
     }
-    g.path(pts, S.beam, { alpha: S.lampA });
+    g.path(pts, S.beam, { alpha: S.lampA, from: S.beamTail });
     if (S.lens === 'div' && S.beam > 0.62 && y0 !== 0)
-      g.path([[0, y0], [-F, 0]], Math.min(1, (S.beam - 0.62) / 0.3), { dash:[5, 6], alpha:.6 * S.lampA, arrows:false, glow:false, width:1.6 });
+      g.path([[0, y0], [-f, 0]], Math.min(1, (S.beam - 0.62) / 0.3), { dash:[5, 6], alpha:.6 * S.lampA * (1 - S.beamTail), arrows:false, glow:false, width:1.6 });
   }
 }
 function drawLens(){
@@ -114,7 +121,7 @@ function drawFoci(){
   if ((S.lens !== 'conv' && S.lens !== 'div') || S.fociA <= 0.01) return;
   const { ctx, X, Y, C } = g;
   ctx.save(); ctx.globalAlpha = S.fociA * S.lensA;
-  for (const [x, lab] of [[-F, 'F'], [F, "F'"]]){
+  for (const [x, lab] of [[-S.f, 'F'], [S.f, "F'"]]){
     ctx.fillStyle = C['stage-ink']; ctx.beginPath(); ctx.arc(X(x), Y(0), 3.6, 0, Math.PI * 2); ctx.fill();
     g.text(lab, X(x), Y(-1.4), { weight: 700 });
   }
@@ -125,22 +132,42 @@ function drawObject(){
   if (S.objA <= 0.01) return;
   const { ctx, X, Y, C } = g;
   ctx.save(); ctx.globalAlpha = S.objA;
-  g.arrowV(-S.d, 0, HOBJ, C.obj, { width: 3.4 });
+  g.arrowV(-S.d, 0, S.h, C.obj, { width: 3.4 });
   g.text('A', X(-S.d) - 10, Y(-0.9), { size: g.fs() - 2, color: C['stage-muted'], weight: 700 });
-  g.text('B', X(-S.d) - 11, Y(HOBJ), { size: g.fs() - 2, color: C.obj, weight: 700 });
-  g.text('Vật', X(-S.d), Y(HOBJ + 1.5), { size: g.fs() - 1, color: C.obj, weight: 600 });
+  g.text('B', X(-S.d) - 11, Y(S.h), { size: g.fs() - 2, color: C.obj, weight: 700 });
+  g.text('Vật', X(-S.d), Y(S.h + 1.5), { size: g.fs() - 1, color: C.obj, weight: 600 });
   ctx.restore();
 }
 function drawImageRays(){
-  if (S.objA <= 0.01 || S.img <= 0 || (S.lens !== 'conv' && S.lens !== 'div')) return;
-  const { ctx } = g, h = HOBJ, d = S.d, fL = lensF(S), endX = S.screenA > 0.5 ? S.s : 37;
+  if (S.objA <= 0.01 || S.img <= 0) return;
+  const { ctx } = g, h = S.h, d = S.d, endX = S.screenA > 0.5 ? S.s : 37, from = S.imgTail;
   ctx.save(); ctx.globalAlpha = S.objA;
-  g.path([[-d, h], [0, h], [endX, h * (1 - endX / fL)]], S.img);   // tia song song trục chính
-  g.path([[-d, h], [0, 0], [endX, -h * endX / d]], S.img);         // tia qua quang tâm
-  const im = imageInfo(S);
-  if (im && !im.atInfinity && !im.real && S.virtA > 0.01){
-    const o = { dash:[5, 6], alpha:.7 * S.virtA, arrows:false, glow:false, width:1.6 };
-    g.path([[0, h], [im.dp, im.hp]], 1, o); g.path([[0, 0], [im.dp, im.hp]], 1, o);
+  if (S.lens === 'none'){   // chưa có thấu kính: ánh sáng từ điểm B truyền thẳng theo nhiều hướng
+    for (const k of [-0.12, 0, 0.12]) g.path([[-d, h], [endX, h + k * (endX + d)]], S.img, { from });
+    ctx.restore(); return;
+  }
+  if (S.lens !== 'conv' && S.lens !== 'div'){ ctx.restore(); return; }
+  const fL = lensF(S), im = imageInfo(S), virt = im && !im.atInfinity && !im.real && S.virtA > 0.01;
+  const ext = { dash:[5, 6], alpha:.7 * S.virtA, arrows:false, glow:false, width:1.6 };
+  const aim = { dash:[5, 6], alpha:.5, arrows:false, glow:false, width:1.4, from };
+  // mỗi tia có tiến độ riêng (S.rayPar, S.rayO, S.rayF: 0..1) để bật/tắt thì tia chạy ra/thu về
+  if (S.rayPar > 0){   // tia song song trục chính: ló ra đi qua F' (hội tụ) / có đường kéo dài qua F (phân kì)
+    g.path([[-d, h], [0, h], [endX, h * (1 - endX / fL)]], S.img * S.rayPar, { from });
+    if (virt) g.path([[0, h], [im.dp, im.hp]], 1, { ...ext, alpha: ext.alpha * S.rayPar });
+  }
+  if (S.rayO > 0){     // tia qua quang tâm O: truyền thẳng
+    g.path([[-d, h], [0, 0], [endX, -h * endX / d]], S.img * S.rayO, { from });
+    if (virt) g.path([[0, 0], [im.dp, im.hp]], 1, { ...ext, alpha: ext.alpha * S.rayO });
+  }
+  // tia tới đi qua F (hội tụ) / hướng tới F' (phân kì): ló ra song song với trục chính.
+  // Cả hai trường hợp, đường tia tới đi qua điểm x = -fL trên trục chính.
+  if (S.rayF > 0 && Math.abs(d - fL) > 0.05){
+    const yh = -h * fL / (d - fL);
+    if (Math.abs(yh) <= LH){
+      g.path([[-d, h], [0, yh], [endX, yh]], S.img * S.rayF, { from });
+      if (S.lens === 'div' || d < fL) g.path(S.lens === 'div' ? [[0, yh], [-fL, 0]] : [[-fL, 0], [-d, h]], S.img * S.rayF, aim);
+      if (virt) g.path([[0, yh], [im.dp, im.hp]], 1, { ...ext, alpha: ext.alpha * S.rayF });
+    }
   }
   ctx.restore();
 }
@@ -151,13 +178,20 @@ function drawScreen(){
   ctx.strokeStyle = C['stage-muted']; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, Y(-8)); ctx.lineTo(x, Y(-12.5)); ctx.stroke();
   ctx.fillStyle = C.screen; ctx.globalAlpha = S.screenA * .9; ctx.fillRect(x - 3, Y(8), 6, 16 * sc); ctx.globalAlpha = S.screenA;
   g.text('Màn chắn', x, Y(9.2), { size: g.fs() - 1, color: C['stage-muted'], weight: 600 });
+  if (S.objA <= 0.5 && S.beam > 0.97 && S.beamTail < 0.03 && S.lampA > 0.5 && (S.lens === 'conv' || S.lens === 'div' || S.lens === 'none')){
+    const w = beamWidth(S), half = Math.min(8, Math.max(0.15, w / 2));
+    ctx.fillStyle = C.beam; ctx.shadowColor = C.beam; ctx.shadowBlur = 12;
+    ctx.fillRect(x - 3, Y(half), 6, 2 * half * sc); ctx.shadowBlur = 0;
+    g.text(w < 0.35 ? 'Điểm sáng' : 'Vệt sáng', x + 8, Y(half + 0.6), { size: g.fs() - 1, color: C.beam, weight: 700, align: 'left' });
+  }
   if (S.objA > 0.5 && S.img > 0.97 && (S.lens === 'conv' || S.lens === 'div')){
     const o = onScreen(S);
-    if (o.sharp){
+    if (S.imgTail > 0.03){ /* ánh sáng đang chạy đi: không vẽ ảnh */ }
+    else if (o.sharp){
       g.arrowV(S.s, 0, o.im.hp, C.img, { width: 3.6 });
       g.text('Ảnh rõ nét', x + 8, Y(o.im.hp < 0 ? o.im.hp - 1.4 : o.im.hp + 1.4), { size: g.fs() - 1, color: C.img, weight: 700, align: 'left' });
     } else {
-      const fL = lensF(S), y1 = HOBJ * (1 - S.s / fL), y2 = -HOBJ * S.s / S.d;
+      const fL = lensF(S), y1 = S.h * (1 - S.s / fL), y2 = -S.h * S.s / S.d;
       const top = Math.min(8, Math.max(0, y1, y2) + .5), bot = Math.max(-8, Math.min(0, y1, y2) - .5);
       const grad = ctx.createLinearGradient(0, Y(top), 0, Y(bot));
       grad.addColorStop(0, 'transparent'); grad.addColorStop(.5, C.beam); grad.addColorStop(1, 'transparent');
@@ -186,6 +220,20 @@ function drawEye(){
   ctx.fillStyle = C.stage; ctx.beginPath(); ctx.arc(cx - w * .42, cy, h * .25, 0, Math.PI * 2); ctx.fill();
   g.text('Mắt nhìn qua thấu kính', cx, cy + h * 2.6, { size: g.fs() - 1, color: C['stage-muted'], weight: 600 });
   ctx.restore();
+}
+// nút ◂ ▸ dưới các dụng cụ kéo được (chỉ ở chế độ tự do)
+function drawHandles(){
+  if (!S.handles) return;
+  const xs = [];
+  if (S.objA > 0.5) xs.push(-S.d);
+  if (S.screenA > 0.5) xs.push(S.s);
+  if (S.lampA > 0.5 && S.beam > 0.5) xs.push(S.lampX - 1.8);
+  const { ctx, X, Y, C, sc } = g, w = 3.2 * sc, h = Math.max(14, 1.3 * sc);
+  for (const x of xs){
+    g.rr(X(x) - w / 2, Y(-10.4) - h / 2, w, h, h / 2);
+    ctx.fillStyle = C['stage-2']; ctx.fill(); ctx.strokeStyle = C['stage-muted']; ctx.lineWidth = 1.2; ctx.stroke();
+    g.text('◂ ▸', X(x), Y(-10.4), { size: Math.max(10, g.fs() - 3), color: C['stage-ink'], weight: 700 });
+  }
 }
 function drawInset(){
   if (!S.inset || S.insetP <= 0) return;
@@ -261,7 +309,7 @@ const questions = [
     opts:['30 cm (giữ nguyên)','20 cm','15 cm','5 cm (sát thấu kính)'], answer:2, ds:[30, 20, 15, 5],
     async sim(h, c){
       const d = this.ds[c]; await h.tw({ d }, 900);
-      if (d > F) await h.tw({ s: d * F / (d - F) }, 1400);
+      if (d > F0) await h.tw({ s: d * F0 / (d - F0) }, 1400);
       else { await h.tw({ s:36 }, 1400); await h.tw({ s:13 }, 1400); }
       await h.wait(700);
     },
@@ -369,6 +417,157 @@ const steps = [
     async run(h){ await h.wait(200); } }
 ];
 
+/* ---------- chế độ tự do ----------
+   params là "cấu hình" của thí nghiệm: mỗi thông số học sinh chỉnh được khai báo một lần ở đây.
+   Lõi dựng bảng điều chỉnh từ params, giữ giá trị trong P và gửi P (kèm describe, observe) cho trợ lý AI. */
+const objMode = P => P.source === 'object';
+const hasLens = P => P.lens !== 'none';
+const free = {
+  title: 'Em tự lắp thí nghiệm',
+  hint: 'Kéo vật, đèn, màn chắn ngay trên giá (chỗ có nút ◂ ▸), hoặc chỉnh ở bảng này. Trợ lý AI luôn biết các thông số em đang đặt.',
+  params: [
+    { key:'lens', label:'Thấu kính', type:'choice', options:[{ value:'conv', label:'Hội tụ (rìa mỏng)' }, { value:'div', label:'Phân kì (rìa dày)' }, { value:'none', label:'Không đặt' }] },
+    { key:'f', label:'Tiêu cự f', type:'range', min:5, max:15, step:1, unit:'cm', show: hasLens },
+    { key:'source', label:'Nguồn sáng', type:'choice', options:[{ value:'object', label:'Vật sáng AB' }, { value:'beam', label:'Đèn chiếu chùm song song' }, { value:'none', label:'Không có' }] },
+    { key:'d', label:'Vật cách thấu kính d', type:'range', min:2, max:36, step:0.5, unit:'cm', show: objMode },
+    { key:'h', label:'Chiều cao vật h', type:'range', min:1, max:6, step:0.5, unit:'cm', show: objMode },
+    { key:'lampD', label:'Đèn cách thấu kính', type:'range', min:6, max:32, step:0.5, unit:'cm', show: P => P.source === 'beam' },
+    { key:'screen', label:'Đặt màn chắn', type:'toggle' },
+    { key:'s', label:'Màn cách thấu kính', type:'range', min:1, max:36, step:0.5, unit:'cm', show: P => P.screen },
+    { key:'foci', label:"Hiện tiêu điểm F và F'", type:'toggle', show: hasLens },
+    { key:'rayPar', label:'Tia song song với trục chính', type:'toggle', group:'Tia sáng đặc biệt', show: P => objMode(P) && hasLens(P) },
+    { key:'rayO', label:'Tia qua quang tâm O', type:'toggle', group:'Tia sáng đặc biệt', show: P => objMode(P) && hasLens(P) },
+    { key:'rayF', label:'Tia qua tiêu điểm', type:'toggle', group:'Tia sáng đặc biệt', show: P => objMode(P) && hasLens(P) }
+  ],
+  defaults: { lens:'conv', f:F0, source:'object', d:30, h:H0, lampD:32, screen:true, s:15, foci:true, rayPar:true, rayO:true, rayF:false },
+  // cảnh "đứng yên" ứng với P (đích của hoạt ảnh; cũng là thứ gửi cho trợ lý AI)
+  target(P){
+    const obj = objMode(P), beam = P.source === 'beam', lens = hasLens(P);
+    const T = {
+      lens: P.lens, f: P.f, lensA: lens ? 1 : 0, fociA: lens && P.foci ? 1 : 0, src: P.source,
+      lampA: beam ? 1 : 0, beam: beam ? 1 : 0, beamTail: 0, lampX: -P.lampD,
+      objA: obj ? 1 : 0, img: obj ? 1 : 0, imgTail: 0, d: P.d, h: P.h,
+      screenA: P.screen ? 1 : 0, s: P.s,
+      rayPar: P.rayPar ? 1 : 0, rayO: P.rayO ? 1 : 0, rayF: P.rayF ? 1 : 0,
+      eyeA: 0, inset: null, insetP: 0, handles: 1
+    };
+    const im = imageInfo(T);
+    T.virtA = obj && im && !im.atInfinity && !im.real ? 1 : 0;
+    return T;
+  },
+  // vào chế độ tự do: giá trống, rồi animate() lắp dần từng món
+  start(S){ Object.assign(S, { lens:'none', lensA:0, fociA:0, src:'none', lampA:0, beam:0, beamTail:0, objA:0, img:0, imgTail:0, screenA:0, virtA:0, eyeA:0, inset:null, insetP:0, handles:1 }); },
+  // hình học (thanh trượt, kéo) đổi ngay, không cần hoạt ảnh
+  place(S, P){ Object.assign(S, { f: P.f, d: P.d, h: P.h, s: P.s, lampX: -P.lampD, handles: 1 }); },
+  // đi từ cảnh hiện tại tới target(P). Bị hủy giữa chừng thì lần gọi sau đi tiếp từ chỗ đang dở.
+  async animate(h, P){
+    const S = h.S;
+    free.place(S, P);
+    let T = free.target(P);
+    // ánh sáng đang "chạy đi" dở: cho chạy hết rồi xóa
+    if (S.beamTail > 0 || S.imgTail > 0){
+      await h.tw({ beamTail: S.beam, imgTail: S.img }, 250);
+      Object.assign(S, { beam:0, beamTail:0, img:0, imgTail:0 });
+    }
+    const lensChange = S.lens !== T.lens, srcChange = S.src !== T.src;
+    // đổi thấu kính hoặc nguồn sáng: ánh sáng cũ chạy đi hết khỏi giá
+    if ((lensChange || srcChange) && (S.beam > 0 || S.img > 0)){
+      await h.tw({ beamTail: S.beam, imgTail: S.img, virtA: 0 }, 650);
+      Object.assign(S, { beam:0, beamTail:0, img:0, imgTail:0 });
+    }
+    // thấu kính cũ mờ đi, thấu kính mới hiện dần
+    if (lensChange){
+      if (S.lensA > 0.01) await h.tw({ lensA:0, fociA:0 }, 280);
+      Object.assign(S, { lens: T.lens, lensA: 0, fociA: 0 });
+    }
+    if (S.lensA !== T.lensA || S.fociA !== T.fociA) await h.tw({ lensA: T.lensA, fociA: T.fociA }, 420);
+    // nguồn sáng cũ tắt, nguồn mới hiện dần; màn chắn hiện/ẩn cùng lúc
+    if (srcChange){
+      if (S.lampA > 0.01 || S.objA > 0.01) await h.tw({ lampA:0, objA:0 }, 280);
+      S.src = T.src;
+    }
+    const fade = {};
+    for (const k of ['lampA', 'objA', 'screenA']) if (S[k] !== T[k]) fade[k] = T[k];
+    if (Object.keys(fade).length) await h.tw(fade, 420);
+    // ánh sáng chạy ra từ nguồn, đi theo thấu kính đang đặt; tia đặc biệt bật/tắt thì chạy ra/thu về
+    const run = {};
+    for (const k of ['beam', 'img', 'rayPar', 'rayO', 'rayF']) if (S[k] !== T[k]) run[k] = T[k];
+    if (Object.keys(run).length) await h.tw(run, 'beam' in run || 'img' in run ? 1300 : 650);
+    // ảnh ảo hiện dần; kiểm tra lại vài lần vì vật có thể vừa bị kéo qua tiêu điểm
+    for (let i = 0; i < 3; i++){
+      T = free.target(P);
+      if (S.virtA === T.virtA) break;
+      await h.tw({ virtA: T.virtA }, 420);
+    }
+  },
+  // điều quan sát được, tính từ công thức thấu kính cho cảnh đích (dùng cho dòng chú thích và gửi trợ lý AI)
+  observe(_S, P){
+    const S = free.target(P);
+    const out = [], f = S.f, d = S.d, conv = P.lens === 'conv', eq = (a, b) => Math.abs(a - b) < 0.01;
+    if (P.source === 'none')
+      return hasLens(P) ? `Đã đặt ${LENS_NAME[P.lens]}, tiêu cự ${fmt(f)} cm, nhưng chưa có nguồn sáng. Em chọn vật sáng AB hoặc đèn chiếu ở bảng điều chỉnh.`
+        : 'Giá quang học đang trống. Em chọn thấu kính và nguồn sáng ở bảng điều chỉnh.';
+    if (!hasLens(P)){
+      if (objMode(P)) return 'Chưa đặt thấu kính: ánh sáng từ vật truyền thẳng nên không tạo được ảnh. Em đặt thấu kính vào giá để tạo ảnh.';
+      out.push('Chưa đặt thấu kính: chùm tia sáng song song truyền thẳng, không bị đổi hướng.');
+      if (P.screen) out.push(`Màn ở ${fmt(S.s)} cm: vệt sáng rộng khoảng ${fmt(beamWidth(S))} cm, bằng bề rộng chùm sáng.`);
+      return out.join(' ');
+    }
+    if (!objMode(P)){
+      out.push(conv
+        ? `Chùm tia song song với trục chính đi qua thấu kính hội tụ thì gặp nhau tại tiêu điểm F', cách thấu kính ${fmt(f)} cm.`
+        : `Chùm tia song song với trục chính đi qua thấu kính phân kì thì loe rộng ra. Kéo dài các tia ló về phía trước (nét đứt) thì gặp nhau tại tiêu điểm F, cách thấu kính ${fmt(f)} cm.`);
+      if (P.screen){
+        const w = beamWidth(S);
+        out.push(w < 0.35 ? `Màn ở ${fmt(S.s)} cm: vệt sáng thu lại thành một điểm, màn đang ở đúng tiêu điểm F'.` : `Màn ở ${fmt(S.s)} cm: vệt sáng rộng khoảng ${fmt(w)} cm.`);
+      }
+      return out.join(' ');
+    }
+    const where = !conv ? 'Thấu kính phân kì'
+      : d > 2 * f && !eq(d, 2 * f) ? 'Vật ở ngoài khoảng 2f'
+      : eq(d, 2 * f) ? 'Vật cách thấu kính đúng bằng 2f'
+      : d > f && !eq(d, f) ? 'Vật nằm giữa f và 2f'
+      : eq(d, f) ? 'Vật đặt đúng tại tiêu điểm F'
+      : 'Vật nằm trong khoảng tiêu cự';
+    const im = imageInfo(S);
+    if (im.atInfinity) return `${where}: các tia ló song song với nhau nên không tạo được ảnh.`;
+    out.push(`${where} (d = ${fmt(d)} cm, f = ${fmt(f)} cm): ảnh ${im.real ? 'thật' : 'ảo'}, ${im.orient}, ${im.size}.`);
+    out.push(im.far ? 'Ảnh ở rất xa thấu kính.'
+      : `Ảnh cách thấu kính ${fmt(Math.abs(im.dp))} cm, cao ${fmt(Math.abs(im.hp))} cm, ${im.real ? 'ở phía sau thấu kính' : 'cùng phía với vật'}${Math.abs(im.dp) > 37 ? ' (nằm ngoài khung hình)' : ''}.`);
+    if (!im.real) out.push('Màn chắn không hứng được ảnh ảo, phải nhìn qua thấu kính mới thấy.');
+    else if (P.screen) out.push(onScreen(S).sharp ? `Màn ở ${fmt(S.s)} cm: hứng được ảnh rõ nét.` : `Màn ở ${fmt(S.s)} cm: chỉ thấy vệt sáng mờ. Dịch màn để tìm ảnh rõ nét.`);
+    return out.join(' ');
+  },
+  actions: [
+    { label: 'Tìm ảnh rõ nét trên màn', run(_S, P){
+      if (P.source === 'none') return { msg: 'Chưa có nguồn sáng. Em chọn vật sáng AB hoặc đèn chiếu trước nhé.' };
+      if (!hasLens(P)) return { msg: 'Chưa đặt thấu kính: ánh sáng truyền thẳng nên không có ảnh hay điểm sáng để hứng.' };
+      if (!objMode(P)){
+        if (P.lens === 'div') return { msg: 'Chùm tia ló loe rộng ra, không gặp nhau sau thấu kính, nên màn không thu được điểm sáng.' };
+        return { patch: { screen: true, s: P.f }, msg: "Đã đưa màn tới tiêu điểm F'." };
+      }
+      const im = imageInfo(free.target(P));
+      if (!im || im.atInfinity) return { msg: 'Vật đang ở đúng tiêu điểm: các tia ló song song, không tạo ảnh để hứng.' };
+      if (!im.real) return { msg: 'Ảnh là ảnh ảo nên màn không hứng được. Nhìn qua thấu kính mới thấy ảnh.' };
+      if (im.dp > 36) return { msg: `Ảnh cách thấu kính ${fmt(im.dp)} cm, xa hơn giá quang học. Em dời vật ra xa thấu kính hơn nhé.` };
+      return { patch: { screen: true, s: im.dp }, msg: 'Đã dịch màn tới chỗ ảnh rõ nét.' };
+    } }
+  ],
+  // kéo dụng cụ trên giá: hit() cho biết đang chạm vào gì, move() trả về thông số mới (lõi tự làm tròn, giới hạn)
+  drag: {
+    hit(S, P, x, y, tol){
+      if (P.screen && Math.abs(x - S.s) < tol && y > -12.5 && y < 9.5) return 'screen';
+      if (objMode(P) && Math.abs(x + S.d) < tol && y > -11.5 && y < S.h + 2) return 'object';
+      if (P.source === 'beam' && x > S.lampX - 3.6 - tol && x < S.lampX + tol && y > -11.5 && y < 6) return 'lamp';
+      return null;
+    },
+    move(key, x){ return key === 'screen' ? { s: x } : key === 'object' ? { d: -x } : { lampD: -x }; }
+  },
+  chips: [
+    { q:'Làm sao để ảnh to hơn vật?', a:'Với thấu kính hội tụ: đặt vật nằm giữa f và 2f thì được ảnh thật, ngược chiều, lớn hơn vật. Đặt vật trong khoảng tiêu cự thì được ảnh ảo, cùng chiều, lớn hơn vật. Thấu kính phân kì thì ảnh luôn nhỏ hơn vật.' },
+    { q:'Vì sao màn không hứng được ảnh?', a:'Màn chỉ hứng được ảnh thật. Nếu ảnh là ảnh ảo (vật trong khoảng tiêu cự của thấu kính hội tụ, hoặc dùng thấu kính phân kì) thì màn không hứng được. Nếu là ảnh thật, em phải dịch màn tới đúng chỗ ảnh thì ảnh mới rõ nét.' } ]
+};
+
 export default {
   id: 'thau-kinh',
   grade: 'KHTN 9', chapter: 'Chương II Ánh sáng', lesson: 'Bài 8',
@@ -380,35 +579,47 @@ export default {
   startChips: [
     { q:'Thí nghiệm này để làm gì?', a:'Thí nghiệm giúp em thấy thấu kính hội tụ và thấu kính phân kì làm đổi hướng ánh sáng thế nào, và tạo ra ảnh ra sao.' },
     { q:'Thấu kính là gì?', a:'Thấu kính là một khối trong suốt có hai mặt cong, hoặc một mặt cong một mặt phẳng. Ánh sáng đi qua thấu kính sẽ bị đổi hướng.' } ],
-  base(S){ Object.assign(S, { lens:'conv', lensA:1, lampA:0, beam:0, fociA:1, objA:0, d:30, screenA:0, s:15, img:0, virtA:0, eyeA:0, inset:null, insetP:0 }); },
+  base(S){ Object.assign(S, { lens:'conv', f:F0, h:H0, lensA:1, lampA:0, lampX:-32.4, beam:0, beamTail:0, imgTail:0, fociA:1, objA:0, d:30, screenA:0, s:15, img:0, virtA:0, eyeA:0, inset:null, insetP:0, rayPar:1, rayO:1, rayF:0, handles:0 }); },
   rest(S){ S.lampA = 1; },
   draw(_g, _S){
     g = _g; S = _S;
     drawGrid(); drawRuler(); drawAxis(); drawLamp(); drawBeam(); drawImageRays();
-    drawLens(); drawFoci(); drawObject(); drawScreen(); drawVirtual(); drawEye(); drawInset();
+    drawLens(); drawFoci(); drawObject(); drawScreen(); drawVirtual(); drawEye(); drawHandles(); drawInset();
   },
   readout(S){
-    if (S.objA > 0.5 && (S.lens === 'conv' || S.lens === 'div')){
+    const lensOk = S.lens === 'conv' || S.lens === 'div';
+    if (S.objA > 0.5 && lensOk){
       let t = 'Vật cách thấu kính ' + fmt(S.d) + ' cm';
       if (S.screenA > 0.5) t += ' · Màn: ' + fmt(S.s) + ' cm';
       const im = imageInfo(S);
       if (im && !im.atInfinity && S.img > 0.97) t += im.far ? ' · Ảnh ở rất xa' : ` · Ảnh ${im.real ? 'thật' : 'ảo'}, ${im.orient}, ${im.size}`;
       return t;
     }
-    if ((S.lens === 'conv' || S.lens === 'div') && S.lensA > 0.5 && S.fociA > 0.5) return 'Tiêu cự f = 10 cm';
+    if (lensOk && S.lensA > 0.5 && S.fociA > 0.5) return 'Tiêu cự f = ' + fmt(S.f) + ' cm' + (S.screenA > 0.5 && S.beam > 0.5 ? ' · Màn: ' + fmt(S.s) + ' cm' : '');
     return '';
   },
   describe(S){
-    const L = [];
-    L.push('Dụng cụ đang đặt trên giá: ' + LENS_NAME[S.lens] + ((S.lens === 'conv' || S.lens === 'div') ? ', tiêu cự 10 cm.' : '.'));
-    if (S.beam > 0.5 && S.lampA > 0.5) L.push('Đèn đang chiếu chùm tia sáng song song với trục chính vào dụng cụ.');
+    const L = [], lensOk = S.lens === 'conv' || S.lens === 'div';
+    L.push('Dụng cụ đang đặt trên giá: ' + LENS_NAME[S.lens] + (lensOk ? `, tiêu cự ${fmt(S.f)} cm.` : '.'));
+    if (S.beam > 0.5 && S.lampA > 0.5){
+      L.push(`Đèn đặt cách dụng cụ ${fmt(-S.lampX)} cm, đang chiếu chùm tia sáng song song với trục chính vào dụng cụ.`);
+      if ((lensOk || S.lens === 'none') && S.screenA > 0.5){
+        const w = beamWidth(S);
+        L.push(`Màn chắn cách thấu kính ${fmt(S.s)} cm; trên màn ${w < 0.35 ? "là một điểm sáng nhỏ (màn đang ở tiêu điểm F')" : `là vệt sáng rộng khoảng ${fmt(w)} cm`}.`);
+      }
+    }
     if (S.objA > 0.5){
-      L.push(`Vật sáng AB cao 3 cm, đặt trước thấu kính, cách thấu kính ${fmt(S.d)} cm.`);
+      L.push(`Vật sáng AB cao ${fmt(S.h)} cm, đặt trước thấu kính, cách thấu kính ${fmt(S.d)} cm.`);
       const im = imageInfo(S);
       if (im && !im.atInfinity) L.push(`Ảnh tạo bởi thấu kính: ảnh ${im.real ? 'thật' : 'ảo'}, ${im.orient}, ${im.size} (cao khoảng ${fmt(Math.abs(im.hp))} cm), cách thấu kính ${fmt(Math.abs(im.dp))} cm, ${im.real ? 'ở phía sau thấu kính' : 'cùng phía với vật'}.`);
-      if (S.screenA > 0.5){ const o = onScreen(S); L.push(`Màn chắn cách thấu kính ${fmt(S.s)} cm; ${o.sharp ? 'màn đang hứng được ảnh rõ nét' : 'trên màn chỉ có vệt sáng mờ, không có ảnh rõ'}.`); }
+      else if (im && im.atInfinity) L.push('Vật đặt đúng tại tiêu điểm: các tia ló song song với nhau, không tạo ảnh.');
+      if (S.screenA > 0.5 && lensOk){ const o = onScreen(S); L.push(`Màn chắn cách thấu kính ${fmt(S.s)} cm; ${o.sharp ? 'màn đang hứng được ảnh rõ nét' : 'trên màn chỉ có vệt sáng mờ, không có ảnh rõ'}.`); }
+      if (!lensOk) L.push('Chưa đặt thấu kính nên ánh sáng từ vật truyền thẳng, không tạo ảnh.');
+      const rays = [S.rayPar && 'tia song song với trục chính', S.rayO && 'tia qua quang tâm O', S.rayF && (S.lens === 'div' ? "tia hướng tới tiêu điểm F'" : 'tia qua tiêu điểm F')].filter(Boolean);
+      if (S.img > 0.5 && rays.length && lensOk) L.push('Trên hình đang vẽ: ' + rays.join(', ') + '.');
     }
+    if (S.handles && S.objA <= 0.5 && S.lampA <= 0.5) L.push('Chưa có nguồn sáng trên giá.');
     return L;
   },
-  steps, questions
+  steps, questions, free
 };

@@ -4,20 +4,26 @@ Mô phỏng thí nghiệm Khoa học tự nhiên THCS theo từng bước SGK (b
 
 - Web tĩnh, **không cần build**. Chỉ có một hàm máy chủ: `api/ask.js`, dùng để gọi Gemini.
 - **API key Gemini nằm trên máy chủ Vercel** (biến môi trường), học sinh không cần tài khoản gì.
-- **Chạy được khi mất mạng** sau lần mở đầu tiên (service worker `sw.js`). Chỉ ô hỏi AI tự do cần mạng; khi mất mạng, các câu gợi ý vẫn có câu trả lời soạn sẵn.
+- **Cần có mạng để mở trang.** Trang đã mở mà mất mạng giữa giờ thì mô phỏng và câu hỏi mồi vẫn chạy tiếp; chỉ ô hỏi AI tự do tạm tắt, các câu gợi ý vẫn có câu trả lời soạn sẵn.
 - Số liệu câu hỏi mồi (đúng ngay lần đầu, hay chọn sai đáp án nào) **lưu trên máy giáo viên** và **tải ra được file CSV** để làm minh chứng.
 
 ## Cấu trúc
 
 ```
-index.html                   Trang chủ: danh sách thí nghiệm
+index.html                   Trang chủ: 3 thẻ môn Vật lí / Hóa học / Sinh học
+subject.html                 Trang một môn (/vat-li, /hoa-hoc, /sinh-hoc): bài theo tab Lớp 6–9
 thau-kinh/index.html         Trang thí nghiệm Thấu kính (KHTN 9 – Bài 8)
-assets/css/lab.css           Giao diện dùng chung
+assets/css/lab.css           Giao diện dùng chung (biến màu, có màu riêng từng môn)
+assets/js/catalog.js         Danh mục môn (SUBJECTS) và bài thí nghiệm (LESSONS)
+assets/js/art.js             Hình minh họa SVG của 3 môn
+assets/js/pages/home.js      Dựng trang chủ từ catalog
+assets/js/pages/subject.js   Dựng trang môn từ catalog
 assets/js/engine.js          Lõi: chạy bước, câu hỏi mồi, trợ lý AI, số liệu, công cụ vẽ
-assets/js/lessons.js         Danh sách bài hiện ở trang chủ
 assets/js/lessons/thau-kinh.js   Nội dung + hình vẽ của thí nghiệm Thấu kính (dùng làm mẫu)
 api/ask.js                   Hàm máy chủ gọi Gemini (Vercel Serverless Function)
-sw.js, manifest.webmanifest  Chạy offline, cài như ứng dụng
+sw.js                        Gỡ bản offline cũ khỏi máy đã từng cài (không còn chạy offline)
+manifest.webmanifest         Cài như ứng dụng
+vercel.json, serve.json      Đường dẫn đẹp /vat-li… (trên Vercel / khi chạy npx serve)
 ```
 
 ## Đưa lên mạng (Vercel)
@@ -69,8 +75,7 @@ Chỉ xem phần mô phỏng (không có AI) thì chạy web tĩnh bất kỳ, v
    - `steps`: mỗi bước có `title`, `sgk` (chép theo SGK), `note` (điều quan sát được), `chips` (câu hỏi gợi ý kèm câu trả lời soạn sẵn), `setup()` và `run()`. Bước có câu hỏi mồi thì thêm `q: true` và gọi `await h.ask('id-câu-hỏi')` trong `run()`.
    - `questions`: mỗi câu có 4 lựa chọn, `answer`, `sim()` (chạy thí nghiệm theo lựa chọn), `reset()`, `wrong[]` (nhận xét cho từng đáp án sai), `hint2`, `right`, `ref`.
 2. Tạo thư mục trang, ví dụ `do-toc-do/index.html` (sao chép `thau-kinh/index.html`, đổi dòng `import lesson from ...`).
-3. Thêm bài vào `assets/js/lessons.js`.
-4. Thêm các file mới vào danh sách `SHELL` trong `sw.js` và **tăng số phiên bản** `CACHE` (ví dụ `khtn-lab-v2`).
+3. Thêm bài vào `LESSONS` trong `assets/js/catalog.js` (đúng `subject`, `grade`, `status: 'ready'`). Thẻ môn ở trang chủ tự cập nhật số thí nghiệm.
 
 Mẹo: thiết kế để **mỗi đáp án là một thông số của thí nghiệm** (một vị trí, một loại dụng cụ…). Khi đó `sim()` chỉ cần chạy lại cùng một mô phỏng với thông số đó.
 
