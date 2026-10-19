@@ -1,7 +1,75 @@
 {
+  "redirects": [
+    {
+      "source": "/thau-kinh",
+      "destination": "/vat-li/thau-kinh",
+      "type": 301
+    },
+    {
+      "source": "/thau-kinh/index",
+      "destination": "/vat-li/thau-kinh",
+      "type": 301
+    },
+    {
+      "source": "/thau-kinh/index.html",
+      "destination": "/vat-li/thau-kinh",
+      "type": 301
+    },
+    {
+      "source": "/toc-do-phan-ung",
+      "destination": "/hoa-hoc/toc-do-phan-ung",
+      "type": 301
+    },
+    {
+      "source": "/toc-do-phan-ung/index",
+      "destination": "/hoa-hoc/toc-do-phan-ung",
+      "type": 301
+    },
+    {
+      "source": "/toc-do-phan-ung/index.html",
+      "destination": "/hoa-hoc/toc-do-phan-ung",
+      "type": 301
+    },
+    {
+      "source": "/quang-hop",
+      "destination": "/sinh-hoc/quang-hop",
+      "type": 301
+    },
+    {
+      "source": "/quang-hop/index",
+      "destination": "/sinh-hoc/quang-hop",
+      "type": 301
+    },
+    {
+      "source": "/quang-hop/index.html",
+      "destination": "/sinh-hoc/quang-hop",
+      "type": 301
+    }
+  ],
   "rewrites": [
-    { "source": "/vat-li", "destination": "/subject.html" },
-    { "source": "/hoa-hoc", "destination": "/subject.html" },
-    { "source": "/sinh-hoc", "destination": "/subject.html" }
+    {
+      "source": "/vat-li",
+      "destination": "/subject.html"
+    },
+    {
+      "source": "/hoa-hoc",
+      "destination": "/subject.html"
+    },
+    {
+      "source": "/sinh-hoc",
+      "destination": "/subject.html"
+    },
+    {
+      "source": "/vat-li/:bai",
+      "destination": "/lab.html"
+    },
+    {
+      "source": "/hoa-hoc/:bai",
+      "destination": "/lab.html"
+    },
+    {
+      "source": "/sinh-hoc/:bai",
+      "destination": "/lab.html"
+    }
   ]
 }

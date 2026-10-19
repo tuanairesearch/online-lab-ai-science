@@ -320,8 +320,8 @@ kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border
 .live .tr-powder{opacity:.15;transition:opacity 1s ease-out .2s}
 .tr-curve{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .4s}
 .live .tr-curve{stroke-dashoffset:0;transition:stroke-dashoffset var(--t) ease-out .2s}
-/* quang hợp – nắng chiếu lá bịt giấy đen; lá đã tẩy màu nhạt, nhỏ iodine thì màu loang từ giọt ra.
-   Hình đứng yên (và khi giảm chuyển động) hiện sẵn kết quả: mặt nạ đã loang hết, ống nhỏ giọt ẩn. */
+/* quang hợp – nắng chiếu lá bịt giấy đen; panh nhúng lá đã tẩy màu vào đĩa iodine, màu ngấm từ mép vào.
+   Hình đứng yên (và khi giảm chuyển động) hiện sẵn kết quả: lá nằm trong đĩa, đã ngấm màu, panh ẩn. */
 .qh-sun{fill:var(--stage-muted);transition:fill .3s}
 .live .qh-sun{fill:var(--beam)}
 .qh-spin{opacity:0;transform-box:view-box;transform-origin:14px 12px;transition:opacity .3s}
@@ -339,19 +339,18 @@ kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border
 @keyframes qhsway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
 .qh-arrow{stroke:var(--stage-muted);transition:stroke .3s}
 .live .qh-arrow{stroke:var(--stage-ink);transition-delay:.9s}
-.qh-dropper,.qh-drop,.qh-ripple{opacity:0}
-.qh-dropper{transform-box:view-box;transform-origin:140px 0}
-.live .qh-dropper{animation:qhdropper 2.2s ease .9s both}
-@keyframes qhdropper{0%{opacity:0;transform:scale(0)}15%{opacity:1;transform:scale(1.3)}25%,75%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(0)}}
-.qh-drop{transform-box:fill-box;transform-origin:50% 100%}
-.live .qh-drop{animation:qhdrop .6s ease-in 1.3s both}
-@keyframes qhdrop{0%{opacity:0;transform:translateY(0)}10%,85%{opacity:1;transform:translateY(27px)}100%{opacity:0;transform:translateY(32px) scale(1.8,.4)}}
+.qh-tongs,.qh-ripple{opacity:0}
+.qh-dip{transform-box:view-box;transform-origin:140px 50px}
+.live .qh-dip{animation:qhdip .7s cubic-bezier(.5,0,.75,1) .9s both}
+@keyframes qhdip{from{transform:translateY(-14px) scale(.82)}to{transform:none}}
+.live .qh-tongs{animation:qhtongs 2s ease .9s both}
+@keyframes qhtongs{0%{opacity:0;transform:translateY(-10px)}10%{opacity:1;transform:translateY(-10px)}35%,55%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-18px)}}
 .qh-ripple{transform-box:fill-box;transform-origin:center}
-.live .qh-ripple{animation:qhripple .9s ease-out 1.85s both}
-@keyframes qhripple{0%{opacity:0;transform:scale(.2)}10%{opacity:1}100%{opacity:0;transform:scale(3)}}
-.qh-spread{transform-box:fill-box;transform-origin:center}
-.live .qh-spread{animation:qhspread 1.3s ease-out 1.85s both}
-@keyframes qhspread{from{transform:scale(0)}to{transform:scale(1)}}
+.live .qh-ripple{animation:qhripple .8s ease-out 1.6s both}
+@keyframes qhripple{0%{opacity:0;transform:scale(.9)}15%{opacity:1}100%{opacity:0;transform:scale(1.25)}}
+.qh-soak{transform-box:fill-box;transform-origin:center;transform:scale(0)}
+.live .qh-soak{animation:qhsoak 1.3s ease-in 1.7s both}
+@keyframes qhsoak{from{transform:scale(1)}to{transform:scale(0)}}
 .qh-result{transform-box:view-box;transform-origin:140px 52px}
 .live .qh-result{animation:qhpop .6s cubic-bezier(.34,1.8,.5,1) 3.1s both,qhbreathe 1.6s ease-in-out 3.7s infinite alternate}
 @keyframes qhpop{0%{transform:scale(1)}40%{transform:scale(.88)}100%{transform:scale(1)}}

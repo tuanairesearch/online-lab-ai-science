@@ -27,7 +27,8 @@ export function animateOnHover(els){
     const set = on => c.classList.toggle('live', on);
     c.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') set(true); });
     c.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') set(false); });
-    c.addEventListener('focusin', () => set(true));
+    // chỉ focus bằng phím: bấm chuột cũng focus link, và khi quay lại tab trình duyệt trả focus về link đó
+    c.addEventListener('focusin', e => { if (e.target.matches(':focus-visible')) set(true); });
     c.addEventListener('focusout', () => set(false));
     if (io) io.observe(c);
   });
@@ -56,8 +57,8 @@ function flask(cx, col, solid, bubbles, plunger){
 const bubbleSet = (cx, n, t, spread) => Array.from({ length: n }, (_, i) =>
   `<circle class="tr-bub" cx="${(cx + (i / Math.max(1, n - 1) - 0.5) * spread).toFixed(1)}" cy="${89 - (i % 2)}" r="${1.2 + (i % 3) * 0.4}" style="--t:${t}s;--d:${(i * t / n).toFixed(2)}s"/>`).join('');
 // Quang hợp: lá khoai lang hình tim (cùng hình với mô phỏng), gốc cuống ở (cx, by), cao s.
-// Khi chuyển động: nắng chiếu lá (phần bịt giấy đen không nhận sáng) → lá đã tẩy màu nhạt → nhỏ iodine,
-// màu loang từ giọt ra: phần không bịt xanh tím, phần bịt vàng nâu; lá trong đĩa nảy lên, sao lấp lánh.
+// Khi chuyển động: nắng chiếu lá (phần bịt giấy đen không nhận sáng) → panh nhúng lá đã tẩy màu vào đĩa iodine,
+// màu ngấm từ mép lá vào: phần không bịt xanh tím, phần bịt vàng nâu; lá trong đĩa nảy lên, sao lấp lánh.
 // Mặt trời quay, cây đung đưa liên tục trong lúc chuyển động.
 function leafD(cx, by, s){
   const P = (x, y) => `${(cx + x * s).toFixed(1)} ${(by - y * s).toFixed(1)}`;
@@ -87,10 +88,10 @@ export const LESSON_ART = {
     <path class="tr-curve" d="M140 86 C150 40, 158 30, 194 29" pathLength="1" style="--t:1s" fill="none" stroke="var(--obj)" stroke-width="2.2" stroke-linecap="round"/>
     <path class="tr-curve" d="M140 86 C165 72, 182 54, 194 46" pathLength="1" style="--t:2.6s" fill="none" stroke="var(--glass)" stroke-width="2.2" stroke-linecap="round"/>
   </svg>`,
-  'quang-hop': `<svg viewBox="0 0 200 100" role="img" aria-label="Lá khoai lang bịt một dải giấy đen; sau khi nhỏ iodine, phần không bịt xanh tím, phần bịt không có màu xanh tím">
+  'quang-hop': `<svg viewBox="0 0 200 100" role="img" aria-label="Lá khoai lang bịt một dải giấy đen; sau khi nhúng vào dung dịch iodine, phần không bịt xanh tím, phần bịt không có màu xanh tím">
     <defs>
       <clipPath id="qh-leaf"><path d="${leafD(140, 84, 70)}"/></clipPath>
-      <mask id="qh-drip"><rect width="200" height="100" fill="#fff"/><circle class="qh-spread" cx="140" cy="52" r="60" fill="#000"/></mask>
+      <mask id="qh-soak"><rect width="200" height="100" fill="#000"/><circle class="qh-soak" cx="140" cy="50" r="60" fill="#fff"/></mask>
     </defs>
     <g class="qh-sun-g">
       <g class="qh-spin" stroke="var(--beam)" stroke-width="1.4" stroke-linecap="round">${
@@ -111,23 +112,22 @@ export const LESSON_ART = {
     </g>
     <path class="qh-arrow" d="M92 50 H106 M101 45 L106 50 L101 55" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     <circle cx="140" cy="50" r="44" fill="var(--stage-2)" stroke="var(--glass)" stroke-width="1.4"/>
-    <g class="qh-result">
+    <circle cx="140" cy="50" r="41" fill="var(--iodine)" fill-opacity=".3"/>
+    <g class="qh-dip"><g class="qh-result">
     <path d="${leafD(140, 84, 70)}" fill="var(--starch)"/>
     <g clip-path="url(#qh-leaf)">
       <rect x="90" y="${84 - 70 * 0.62}" width="100" height="${70 * 0.26}" fill="var(--leaf-pale)"/>
       <rect x="90" y="${84 - 70 * 0.62}" width="100" height="${70 * 0.26}" fill="var(--iodine)" fill-opacity=".55"/>
     </g>
-    <path d="${leafD(140, 84, 70)}" fill="var(--leaf-pale)" mask="url(#qh-drip)"/>
+    <path d="${leafD(140, 84, 70)}" fill="var(--leaf-pale)" mask="url(#qh-soak)"/>
     <path d="${leafD(140, 84, 70)}" fill="none" stroke="var(--stage)" stroke-width="1"/>
-    </g>
-    <circle class="qh-ripple" cx="140" cy="52" r="8" fill="none" stroke="var(--iodine)" stroke-width="1.6"/>
+    </g></g>
+    <circle class="qh-ripple" cx="140" cy="50" r="36" fill="none" stroke="var(--iodine)" stroke-width="1.6"/>
     <g class="qh-spark" fill="var(--beam)">${[[104, 22, 0], [178, 30, .4], [170, 86, .8]].map(([x, y, d]) =>
       `<path d="M${x} ${y - 5} L${x + 1.3} ${y - 1.3} L${x + 5} ${y} L${x + 1.3} ${y + 1.3} L${x} ${y + 5} L${x - 1.3} ${y + 1.3} L${x - 5} ${y} L${x - 1.3} ${y - 1.3} Z" style="--d:${d}s"/>`).join('')}</g>
-    <g class="qh-dropper">
-      <rect x="136" y="0" width="8" height="6" rx="3" fill="var(--stage-muted)"/>
-      <path d="M138.5 6 H141.5 V12 L140 14 L138.5 12 Z" fill="var(--glass)" fill-opacity=".7"/>
+    <g class="qh-tongs" fill="none" stroke="var(--stage-ink)" stroke-width="1.6" stroke-linecap="round">
+      <path d="M154 -6 L141 15"/><path d="M159 -4 L142.5 15.5"/>
     </g>
-    <path class="qh-drop" d="M140 14 Q143 18.5 140 20 Q137 18.5 140 14 Z" fill="var(--iodine)"/>
   </svg>`
 };
 

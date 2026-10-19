@@ -1,4 +1,5 @@
 {
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/sw.js",
@@ -32,6 +33,27 @@
     {
       "source": "/:mon(vat-li|hoa-hoc|sinh-hoc)",
       "destination": "/subject.html"
+    },
+    {
+      "source": "/:mon(vat-li|hoa-hoc|sinh-hoc)/:bai",
+      "destination": "/lab.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/thau-kinh/:path*",
+      "destination": "/vat-li/thau-kinh",
+      "permanent": true
+    },
+    {
+      "source": "/toc-do-phan-ung/:path*",
+      "destination": "/hoa-hoc/toc-do-phan-ung",
+      "permanent": true
+    },
+    {
+      "source": "/quang-hop/:path*",
+      "destination": "/sinh-hoc/quang-hop",
+      "permanent": true
     }
   ]
 }

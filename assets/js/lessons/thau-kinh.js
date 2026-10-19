@@ -1,4 +1,6 @@
-// Thí nghiệm: Thấu kính hội tụ và thấu kính phân kì (KHTN 9 – Bài 8, Kết nối tri thức)
+// Thí nghiệm: Thấu kính hội tụ và thấu kính phân kì (KHTN 9 – Bài 8 Thấu kính, Kết nối tri thức, tr. 40–46)
+// Bám SGK: thí nghiệm đường truyền ánh sáng qua thấu kính (tr. 42) và thí nghiệm tạo ảnh với vật sáng hình chữ F (Hình 8.12).
+// Vật sáng chữ F được vẽ thành mũi tên AB như phần dựng ảnh trong SGK.
 // Đơn vị trong cảnh: cm. Thấu kính đặt ở x = 0, trục chính là y = 0.
 //
 // Cấu trúc một module thí nghiệm (dùng file này làm mẫu khi thêm bài mới):
@@ -118,6 +120,13 @@ function drawBeam(){
       g.path([[0, y0], [-f, 0]], Math.min(1, (S.beam - 0.62) / 0.3), { dash:[5, 6], alpha:.6 * S.lampA * (1 - S.beamTail), arrows:false, glow:false, width:1.6 });
   }
 }
+// tia sáng tới quang tâm O: truyền thẳng (thí nghiệm đường truyền ánh sáng, SGK tr. 42)
+function drawORay(){
+  if (!S.oRay || S.oRay <= 0 || (S.lens !== 'conv' && S.lens !== 'div')) return;
+  const y0 = 6, x0 = -30, k = -y0 / -x0;
+  g.path(trace(S, [[x0, y0], [0, 0]], k), S.oRay, { color: g.C.obj, width: 2.4 });
+  if (S.oRay > 0.97) g.text('Tia tới quang tâm O: truyền thẳng', g.X(13), g.Y(-6.2), { size: g.fs() - 1, color: g.C.obj, weight: 700, align: 'left' });
+}
 function drawLens(){
   if (S.lensA <= 0.01) return;
   const { ctx, X, Y, C, sc } = g, t = S.lens;
@@ -161,7 +170,7 @@ function drawObject(){
   g.arrowV(-S.d, 0, S.h, C.obj, { width: 3.4 });
   g.text('A', X(-S.d) - 10, Y(-0.9), { size: g.fs() - 2, color: C['stage-muted'], weight: 700 });
   g.text('B', X(-S.d) - 11, Y(S.h), { size: g.fs() - 2, color: C.obj, weight: 700 });
-  g.text('Vật', X(-S.d), Y(S.h + 1.5), { size: g.fs() - 1, color: C.obj, weight: 600 });
+  g.text(S.handles ? 'Vật' : 'Vật sáng (chữ F)', X(-S.d) + 6, Y(S.h + 2.5), { size: g.fs() - 1, color: C.obj, weight: 600, align: 'right' });
   ctx.restore();
 }
 function drawImageRays(){
@@ -326,7 +335,9 @@ function drawInset(){
 }
 
 /* ---------- câu hỏi mồi ---------- */
-const REF8 = 'SGK KHTN 9 · Bài 8 Thấu kính, tr. 40';
+const REF8 = 'SGK KHTN 9 · Bài 8 Thấu kính';
+const REF8A = REF8 + ' · Thí nghiệm đường truyền ánh sáng, tr. 42';
+const REF8B = REF8 + ' · Thí nghiệm tạo ảnh (Hình 8.12)';
 const questions = [
   { id:'q1', short:'Vì sao tia sáng đổi hướng qua thấu kính?', tag:'Ôn bài cũ · Bài 5–7',
     text:'Tia sáng bị đổi hướng khi đi qua thấu kính. Theo em, đó là do hiện tượng nào em đã học?',
@@ -341,8 +352,8 @@ const questions = [
       'Tán sắc (Bài 7) là khi ánh sáng trắng bị tách thành nhiều màu. Ở đây chùm sáng chỉ có một màu mà vẫn bị lệch hướng. Vậy hiện tượng gốc làm tia đổi hướng là gì?'
     ],
     hint2:'Gợi ý: nhớ lại Bài 5. Khi ánh sáng đi từ không khí vào thủy tinh, tia sáng bị gãy khúc ngay tại mặt phân cách.',
-    right:'Ánh sáng bị khúc xạ hai lần: khi đi từ không khí vào thủy tinh và khi từ thủy tinh ra không khí. Mặt thấu kính cong nên mỗi tia lệch một góc khác nhau, nhờ vậy cả chùm tia gom về một điểm.',
-    ref:'SGK KHTN 9 · Bài 5 Khúc xạ ánh sáng, tr. 25' },
+    right:'Ánh sáng bị khúc xạ khi đi vào và đi ra khỏi thủy tinh. Có thể coi thấu kính như gồm nhiều lăng kính nhỏ ghép lại: tia ở gần rìa bị lệch nhiều hơn tia ở gần trục chính, nhờ vậy cả chùm tia gom về một điểm.',
+    ref:'SGK KHTN 9 · Bài 5 Khúc xạ ánh sáng; Bài 8 (giải thích bằng lăng kính, tr. 43)' },
   { id:'q2', short:'Chọn dụng cụ để chùm tia loe ra', tag:'Hội tụ hay phân kì?',
     text:'Thầy muốn chùm tia ló LOE RỘNG RA thay vì gom lại. Em chọn dụng cụ nào đặt vào giá?',
     opts:['Thấu kính rìa mỏng (như lúc nãy)','Thấu kính rìa dày','Tấm kính phẳng','Gương phẳng'], answer:1,
@@ -357,7 +368,7 @@ const questions = [
     ],
     hint2:'Gợi ý: thấu kính rìa mỏng thì gom tia sáng lại. Còn loại có hình dạng ngược lại thì sao?',
     right:'Thấu kính rìa dày là thấu kính phân kì. Chùm tia ló loe rộng ra; kéo dài các tia ló về phía sau (nét đứt) thì chúng gặp nhau tại tiêu điểm F.',
-    ref: REF8 },
+    ref: REF8A },
   { id:'q3', short:'Đặt vật ở đâu để ảnh to hơn vật?', tag:'Ảnh qua thấu kính hội tụ',
     text:'Muốn hứng được ảnh trên màn TO HƠN vật, em đặt vật cách thấu kính bao nhiêu?',
     opts:['30 cm (giữ nguyên)','20 cm','15 cm','5 cm (sát thấu kính)'], answer:2, ds:[30, 20, 15, 5],
@@ -376,7 +387,7 @@ const questions = [
     ],
     hint2:'Gợi ý: ảnh thật lớn hơn vật khi vật nằm giữa f và 2f, tức là cách thấu kính từ 10 cm đến 20 cm.',
     right:'Vật nằm giữa f và 2f (10–20 cm) cho ảnh thật, ngược chiều, lớn hơn vật. Ở đây ảnh cao gấp 2 lần vật, và màn phải lùi ra 30 cm mới thấy rõ.',
-    ref: REF8 },
+    ref: REF8B },
   { id:'q4', short:'Thấu kính phân kì: hứng ảnh ở đâu?', tag:'Thấu kính phân kì',
     text:'Đã thay bằng thấu kính phân kì, vật vẫn cách 30 cm. Dịch màn tới đâu thì hứng được ảnh rõ nét?',
     opts:['Sát thấu kính (5 cm)','Ở 15 cm như lúc nãy','Ra xa (30 cm)','Không có vị trí nào hứng được'], answer:3, ss:[5, 15, 30],
@@ -392,8 +403,8 @@ const questions = [
       null
     ],
     hint2:'Gợi ý: ảnh tạo bởi thấu kính phân kì là ảnh thật hay ảnh ảo? Ảnh ảo có hứng được trên màn không?',
-    right:'Thấu kính phân kì luôn cho ảnh ảo, cùng chiều, nhỏ hơn vật, nằm cùng phía với vật (nét đứt). Màn chắn không hứng được, chỉ thấy khi nhìn qua thấu kính.',
-    ref: REF8 }
+    right:'Thấu kính phân kì cho ảnh ảo, cùng chiều, nhỏ hơn vật, nằm cùng phía với vật (nét đứt). Màn chắn không hứng được, phải đặt mắt nhìn qua thấu kính mới thấy.',
+    ref: REF8B }
 ];
 
 /* ---------- các bước theo SGK ---------- */
@@ -401,73 +412,76 @@ const CONCLUSION = `<div class="concl-wrap"><table class="concl"><thead><tr><th>
 <tr><th>Hình dạng</th><td>Rìa mỏng hơn phần giữa</td><td>Rìa dày hơn phần giữa</td></tr>
 <tr><th>Chùm tia song song</th><td>Hội tụ tại tiêu điểm F'</td><td>Loe ra, đường kéo dài qua F</td></tr>
 <tr><th>Vật ngoài khoảng tiêu cự</th><td>Ảnh thật, ngược chiều</td><td rowspan="2">Luôn là ảnh ảo, cùng chiều, nhỏ hơn vật</td></tr>
-<tr><th>Vật trong khoảng tiêu cự</th><td>Ảnh ảo, cùng chiều, lớn hơn vật</td></tr></tbody></table></div>`;
+<tr><th>Vật trong khoảng tiêu cự</th><td>Ảnh ảo, cùng chiều, lớn hơn vật</td></tr>
+<tr><th>Tia tới quang tâm O</th><td colspan="2">Truyền thẳng, không đổi hướng</td></tr>
+<tr><th>Hứng ảnh trên màn</th><td>Ảnh thật hứng được trên màn chắn; ảnh ảo không hứng được, phải nhìn qua thấu kính</td><td>Không hứng được ảnh</td></tr></tbody></table></div>`;
 
 const steps = [
   { title:'Chuẩn bị dụng cụ',
-    sgk:'Đặt đèn chiếu chùm sáng song song và thấu kính rìa mỏng (tiêu cự 10 cm) lên giá quang học. Thấu kính đặt ở vạch 0.',
-    note:'Thấu kính rìa mỏng là thấu kính hội tụ. Điểm O ở giữa thấu kính là quang tâm; đường nét đứt đi qua O là trục chính.',
+    sgk:'Quan sát hình dạng thấu kính: rìa mỏng hơn hay dày hơn phần giữa. Đặt nguồn sáng và thấu kính rìa mỏng (tiêu cự 10 cm) lên giá quang học, thấu kính ở vạch 0.',
+    note:'Thấu kính rìa mỏng là thấu kính hội tụ, rìa dày là thấu kính phân kì. Điểm O ở giữa thấu kính là quang tâm; đường nét đứt đi qua O, vuông góc với thấu kính là trục chính.',
     chips:[
       { q:'Thấu kính là gì?', a:'Thấu kính là một khối trong suốt (thường bằng thủy tinh hoặc nhựa) có hai mặt cong, hoặc một mặt cong một mặt phẳng. Ánh sáng đi qua thấu kính sẽ bị đổi hướng.' },
       { q:'Trục chính là gì?', a:'Trục chính là đường thẳng đi qua quang tâm O và vuông góc với thấu kính. Trong mô phỏng, đó là đường nét đứt nằm ngang.' } ],
     setup(S){ S.lensA = 0; S.fociA = 0; },
     async run(h){ await h.tw({ lampA:1 }, 500); await h.tw({ lensA:1 }, 600); await h.tw({ fociA:1 }, 500); } },
-  { title:'Chiếu chùm sáng song song', q:true,
-    sgk:'Bật đèn, chiếu chùm tia sáng song song với trục chính tới thấu kính. Quan sát chùm tia ló.',
-    note:"Chùm tia ló hội tụ tại một điểm sau thấu kính: đó là tiêu điểm F'. Khoảng cách OF' = 10 cm là tiêu cự f.",
+  { title:'Đường truyền ánh sáng qua thấu kính hội tụ', q:true,
+    sgk:'Chiếu chùm tia sáng song song với trục chính tới thấu kính hội tụ, rồi chiếu một tia sáng tới quang tâm O. Quan sát các tia ló.',
+    note:"Chùm tia ló hội tụ tại một điểm sau thấu kính: đó là tiêu điểm F'. Khoảng cách từ O đến tiêu điểm (10 cm) là tiêu cự f. Tia tới quang tâm O truyền thẳng, không đổi hướng.",
     chips:[
       { q:'Vì sao chùm tia lại gom về một điểm?', a:'Vì ánh sáng bị khúc xạ khi đi qua thủy tinh. Phần rìa thấu kính nghiêng nhiều hơn phần giữa nên tia ở rìa bị lệch nhiều hơn, cả chùm gom về tiêu điểm F\'.' },
       { q:'Tiêu cự là gì?', a:"Tiêu cự là khoảng cách từ quang tâm O đến tiêu điểm F'. Trong thí nghiệm này tiêu cự là 10 cm." } ],
     setup(S){ S.lampA = 1; },
-    async run(h){ await h.tw({ beam:1 }, 1900); h.showObs(); await h.wait(900); await h.ask('q1'); } },
-  { title:'Đổi dụng cụ để chùm tia ló loe ra', q:true,
-    sgk:'Thay thấu kính bằng một dụng cụ khác sao cho chùm tia ló loe rộng ra. Quan sát chùm tia ló.',
-    note:'Thấu kính rìa dày là thấu kính phân kì: chùm tia ló loe rộng ra. Kéo dài các tia ló về phía sau (nét đứt), chúng gặp nhau tại tiêu điểm F.',
+    async run(h){ await h.tw({ beam:1 }, 1900); await h.wait(300); await h.tw({ oRay:1 }, 1200); h.showObs(); await h.wait(900); await h.ask('q1'); } },
+  { title:'Đường truyền ánh sáng qua thấu kính phân kì', q:true,
+    sgk:'Lặp lại thí nghiệm với một dụng cụ khác sao cho chùm tia ló loe rộng ra. Chiếu chùm tia song song với trục chính, rồi chiếu một tia tới quang tâm O.',
+    note:'Thấu kính rìa dày là thấu kính phân kì: chùm tia ló loe rộng ra; kéo dài các tia ló về phía sau (nét đứt), chúng gặp nhau tại tiêu điểm F. Tia tới quang tâm O vẫn truyền thẳng.',
     chips:[
       { q:'Vì sao rìa dày lại làm tia loe ra?', a:'Thấu kính rìa dày có hai mặt lõm. Khi khúc xạ qua hai mặt lõm, tia sáng bị lệch ra xa trục chính nên cả chùm loe rộng ra.' },
       { q:'Thấu kính phân kì dùng để làm gì?', a:'Thấu kính phân kì được dùng làm kính cận để giúp người cận thị nhìn rõ vật ở xa.' } ],
     setup(S){ S.lampA = 1; S.lens = 'none'; S.fociA = 0; },
-    async run(h){ await h.wait(500); await h.ask('q2'); h.S.fociA = 0; await h.tw({ fociA:1 }, 500); } },
-  { title:'Tạo ảnh qua thấu kính hội tụ',
-    sgk:'Lắp lại thấu kính hội tụ. Đặt vật sáng AB cách thấu kính 30 cm, dịch màn chắn đến khi hứng được ảnh rõ nét.',
+    async run(h){ await h.wait(500); await h.ask('q2'); h.S.fociA = 0; await h.tw({ fociA:1 }, 500); h.S.oRay = 0; await h.tw({ oRay:1 }, 1200); } },
+  { title:'Thí nghiệm 1: vật ngoài khoảng tiêu cự (d > f)',
+    sgk:'Lắp lại thấu kính hội tụ, đèn chiếu sáng vật sáng hình chữ F. Đặt vật cách thấu kính d = 30 cm (d > f), từ từ dịch màn chắn đến khi thu được ảnh rõ nét. Nhận xét đặc điểm ảnh.',
     note:'Vật ở xa (d = 30 cm, lớn hơn 2f): ảnh thật, ngược chiều, nhỏ hơn vật. Màn cách thấu kính 15 cm thì ảnh rõ nét nhất.',
     chips:[
       { q:'Ảnh thật khác ảnh ảo thế nào?', a:'Ảnh thật hứng được trên màn chắn. Ảnh ảo không hứng được trên màn, chỉ nhìn thấy khi nhìn qua thấu kính.' },
       { q:'Vì sao ảnh bị ngược chiều?', a:'Các tia sáng từ đỉnh B của vật sau khi qua thấu kính hội tụ cắt nhau ở phía dưới trục chính, nên ảnh của B nằm ở dưới, tức là ảnh bị lộn ngược.' } ],
     setup(S){ S.s = 30; },
     async run(h){ await h.tw({ objA:1 }, 600); await h.tw({ screenA:1 }, 500); await h.tw({ img:1 }, 1500); await h.tw({ s:15 }, 1700); } },
-  { title:'Dời vật lại gần thấu kính', q:true,
-    sgk:'Dời vật lại gần thấu kính, dịch màn để tìm ảnh rõ nét. So sánh độ lớn của ảnh với vật.',
+  { title:'Dời vật lại gần (vẫn d > f)', q:true,
+    sgk:'Vẫn đặt vật ngoài khoảng tiêu cự nhưng gần thấu kính hơn, dịch màn để tìm ảnh rõ nét. So sánh độ lớn của ảnh với vật.',
     note:'Vật nằm giữa f và 2f (d = 15 cm): ảnh thật, ngược chiều, lớn hơn vật. Màn phải lùi ra 30 cm mới hứng được ảnh rõ.',
     chips:[
       { q:'2f nghĩa là gì?', a:'2f là hai lần tiêu cự. Tiêu cự ở đây là 10 cm nên 2f = 20 cm.' },
       { q:'Vì sao vật gần hơn thì ảnh to hơn?', a:'Khi vật tiến lại gần tiêu điểm, các tia ló gặp nhau ở xa thấu kính hơn, nên ảnh hiện ra xa hơn và lớn hơn.' } ],
     setup(S){ S.objA = 1; S.screenA = 1; S.img = 1; },
     async run(h){ await h.wait(400); await h.ask('q3'); } },
-  { title:'Đặt vật trong khoảng tiêu cự',
-    sgk:'Dời vật vào trong khoảng tiêu cự (d = 5 cm). Dịch màn để tìm ảnh, sau đó nhìn qua thấu kính.',
+  { title:'Thí nghiệm 1: vật trong khoảng tiêu cự (d < f)',
+    sgk:'Lặp lại thí nghiệm khi vật nằm trong khoảng tiêu cự (d = 5 cm): dịch màn để tìm ảnh, sau đó đặt mắt nhìn qua thấu kính.',
     note:'Màn không hứng được ảnh. Nhìn qua thấu kính thấy ảnh ảo, cùng chiều, lớn hơn vật. Kính lúp hoạt động theo đúng cách này (Bài 10).',
     chips:[
       { q:'Vì sao màn không hứng được ảnh?', a:'Khi vật nằm trong khoảng tiêu cự, các tia ló loe ra và không cắt nhau phía sau thấu kính. Chỉ đường kéo dài của chúng gặp nhau ở phía trước, tạo ảnh ảo.' },
       { q:'Kính lúp hoạt động thế nào?', a:'Kính lúp là thấu kính hội tụ có tiêu cự ngắn. Đặt vật trong khoảng tiêu cự thì nhìn qua kính thấy ảnh ảo, cùng chiều và lớn hơn vật.' } ],
     setup(S){ S.objA = 1; S.screenA = 1; S.img = 1; S.d = 15; S.s = 30; },
     async run(h){ await h.tw({ d:5 }, 1000); await h.tw({ s:36 }, 1200); await h.tw({ s:13 }, 1400); await h.wait(500); await h.tw({ screenA:0 }, 500); await h.tw({ eyeA:1, virtA:1 }, 900); } },
-  { title:'Tạo ảnh qua thấu kính phân kì', q:true,
-    sgk:'Thay bằng thấu kính phân kì. Giữ vật cách thấu kính 30 cm, dịch màn để tìm ảnh.',
-    note:'Thấu kính phân kì luôn cho ảnh ảo, cùng chiều, nhỏ hơn vật, nằm cùng phía với vật. Màn chắn không hứng được.',
+  { title:'Thí nghiệm 2: thấu kính phân kì', q:true,
+    sgk:'Thay thấu kính hội tụ bằng thấu kính phân kì. Đặt vật ở d > f (30 cm), thử dịch màn, rồi đặt mắt quan sát ảnh qua thấu kính. Lặp lại với d < f (5 cm).',
+    note:'Cả khi d > f và d < f, thấu kính phân kì đều cho ảnh ảo, cùng chiều, nhỏ hơn vật, nằm cùng phía với vật. Màn chắn không hứng được, phải nhìn qua thấu kính.',
     chips:[
       { q:'Vì sao thấu kính phân kì không cho ảnh thật?', a:'Thấu kính phân kì luôn làm chùm tia ló loe ra, nên các tia ló không bao giờ cắt nhau phía sau thấu kính. Vì vậy không có ảnh thật.' },
       { q:'Ảnh ảo nằm ở đâu?', a:'Ảnh ảo nằm cùng phía với vật, gần thấu kính hơn vật. Trong mô phỏng là mũi tên nét đứt.' } ],
     setup(S){ S.lens = 'div'; S.objA = 1; S.screenA = 1; S.img = 1; },
-    async run(h){ h.S.lensA = 0; await h.tw({ lensA:1 }, 500); await h.wait(400); await h.ask('q4'); } },
+    async run(h){ h.S.lensA = 0; await h.tw({ lensA:1 }, 500); await h.wait(400); await h.ask('q4'); await h.tw({ eyeA:1, screenA:0 }, 600); await h.wait(700); await h.tw({ d:5 }, 1600); await h.wait(400); } },
   { title:'Kết luận',
-    sgk:'Rút ra đặc điểm của thấu kính hội tụ và thấu kính phân kì.',
+    sgk:'Rút ra đặc điểm của thấu kính hội tụ và thấu kính phân kì; nêu các cách phân biệt hai loại thấu kính.',
     note:"Thấu kính hội tụ (rìa mỏng): chùm tia song song hội tụ tại F'; vật ngoài khoảng tiêu cự cho ảnh thật ngược chiều, trong khoảng tiêu cự cho ảnh ảo cùng chiều lớn hơn vật. Thấu kính phân kì (rìa dày): chùm tia song song loe ra; luôn cho ảnh ảo, cùng chiều, nhỏ hơn vật.",
     html: CONCLUSION,
     chips:[
-      { q:'Làm sao phân biệt 2 loại thấu kính bằng tay?', a:'Sờ vào thấu kính: rìa mỏng hơn phần giữa là thấu kính hội tụ, rìa dày hơn phần giữa là thấu kính phân kì.' },
+      { q:'Có những cách nào phân biệt hai loại thấu kính?', a:'Có ba cách: nhìn hoặc sờ hình dạng (rìa mỏng là hội tụ, rìa dày là phân kì); chiếu chùm sáng song song (hội tụ thì chùm tia ló gặp nhau tại một điểm, phân kì thì loe ra); và hứng ảnh của vật trên màn (thấu kính phân kì không bao giờ hứng được ảnh).' },
+      { q:'Ảnh ảo của hai loại thấu kính giống, khác nhau thế nào?', a:'Giống: đều là ảnh ảo, cùng chiều với vật, không hứng được trên màn. Khác: ảnh ảo của thấu kính hội tụ lớn hơn vật, còn của thấu kính phân kì nhỏ hơn vật.' },
       { q:'Tóm tắt giúp em bài này', a:"Thấu kính hội tụ gom chùm sáng song song về tiêu điểm F', cho ảnh thật hoặc ảnh ảo tùy vị trí vật. Thấu kính phân kì làm chùm sáng loe ra và luôn cho ảnh ảo, cùng chiều, nhỏ hơn vật." } ],
-    setup(S){ S.lens = 'div'; S.objA = 1; S.img = 1; S.screenA = .35; S.s = 35; S.virtA = 1; },
+    setup(S){ S.lens = 'div'; S.objA = 1; S.img = 1; S.screenA = 0; S.s = 35; S.virtA = 1; S.eyeA = 1; },
     async run(h){ await h.wait(200); } }
 ];
 
@@ -661,18 +675,18 @@ export default {
   id: 'thau-kinh',
   grade: 'KHTN 9', chapter: 'Chương II Ánh sáng', lesson: 'Bài 8',
   title: 'Thấu kính hội tụ và thấu kính phân kì', shortTitle: 'Thấu kính',
-  intro: 'Thí nghiệm trên giá quang học, chạy theo từng bước SGK. Giữa chừng, trợ lý AI ở góc phải sẽ hỏi em. Chọn sai thì thí nghiệm chạy đúng theo lựa chọn của em, để em tự thấy kết quả.',
+  intro: 'Hai thí nghiệm trong SGK: đường truyền ánh sáng qua thấu kính, và tạo ảnh của vật sáng chữ F trên giá quang học. Giữa chừng có câu hỏi mồi; chọn sai thì thí nghiệm chạy đúng theo lựa chọn của em.',
   canvasLabel: 'Giá quang học với đèn, thấu kính, vật và màn chắn',
   readyTitle: 'Giá quang học đã lắp xong',
   view: { w: 78, h: 37, ox: 0.5, oy: 0.53 },
   startChips: [
     { q:'Thí nghiệm này để làm gì?', a:'Thí nghiệm giúp em thấy thấu kính hội tụ và thấu kính phân kì làm đổi hướng ánh sáng thế nào, và tạo ra ảnh ra sao.' },
     { q:'Thấu kính là gì?', a:'Thấu kính là một khối trong suốt có hai mặt cong, hoặc một mặt cong một mặt phẳng. Ánh sáng đi qua thấu kính sẽ bị đổi hướng.' } ],
-  base(S){ Object.assign(S, { lens:'conv', f:F0, h:H0, lensA:1, lampA:0, lampX:-32.4, beam:0, beamTail:0, imgTail:0, fociA:1, objA:0, d:30, screenA:0, s:15, img:0, virtA:0, eyeA:0, inset:null, insetP:0, rayPar:1, rayO:1, rayF:0, handles:0 }); },
+  base(S){ Object.assign(S, { lens:'conv', f:F0, h:H0, lensA:1, lampA:0, lampX:-32.4, beam:0, beamTail:0, imgTail:0, fociA:1, objA:0, d:30, screenA:0, s:15, img:0, virtA:0, eyeA:0, inset:null, insetP:0, rayPar:1, rayO:1, rayF:0, oRay:0, handles:0 }); },
   rest(S){ S.lampA = 1; },
   draw(_g, _S){
     g = _g; S = _S;
-    drawGrid(); drawRuler(); drawAxis(); drawLamp(); drawBeam(); drawImageRays();
+    drawGrid(); drawRuler(); drawAxis(); drawLamp(); drawBeam(); drawORay(); drawImageRays();
     drawLens(); drawFoci(); drawObject(); drawScreen(); drawVirtual(); drawRealImage(); drawEye(); drawHandles(); drawInset();
   },
   readout(S){
@@ -715,6 +729,8 @@ export default {
       const rays = [S.rayPar && 'tia song song với trục chính', S.rayO && 'tia qua quang tâm O', S.rayF && (S.lens === 'div' ? "tia hướng tới tiêu điểm F'" : 'tia qua tiêu điểm F')].filter(Boolean);
       if (S.img > 0.5 && rays.length && lensOk) L.push('Trên hình đang vẽ: ' + rays.join(', ') + '.');
     }
+    if (S.oRay > 0.5 && lensOk) L.push('Đang vẽ thêm một tia sáng tới quang tâm O: tia ló truyền thẳng, không đổi hướng.');
+    if (S.eyeA > 0.5) L.push('Đang đặt mắt nhìn qua thấu kính để quan sát ảnh ảo.');
     if (S.handles && S.objA <= 0.5 && S.lampA <= 0.5) L.push('Chưa có nguồn sáng trên giá.');
     return L;
   },

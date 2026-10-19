@@ -1,8 +1,10 @@
-// Thí nghiệm: Chứng minh quang hợp tạo ra tinh bột (KHTN 7 – Bài 24, Kết nối tri thức)
-// Đặc tả: docs/lessons/sinh-hoc/quang-hop.md (bản nháp, giáo viên đang duyệt).
+// Thí nghiệm: Chứng minh quang hợp ở cây xanh (KHTN 7 – Bài 24 Thực hành, Kết nối tri thức, tr. 108–110)
+// Đặc tả: docs/lessons/sinh-hoc/quang-hop.md
+// Thí nghiệm 1: tinh bột được tạo thành trong quang hợp (lá khoai lang, băng giấy đen, cồn 90°, nhúng dung dịch iodine).
+// Thí nghiệm 2: quang hợp giải phóng khí oxygen (rong đuôi chó trong ống nghiệm úp ngược, cốc A trong tối, cốc B ngoài nắng, que đóm).
 // Đơn vị cảnh: ô vẽ, không theo tỉ lệ thật. Lượng tinh bột trong lá là số MINH HỌA, từ 0 (không có) tới 1 (nhiều):
 //   để trong tối 2 ngày: tinh bột cũ giảm về 0; chiếu sáng t giờ: phần lá được chiếu tăng thêm min(1, t/4).
-//   Sau khi nhỏ iodine: có tinh bột → xanh tím; không có → vàng nâu (màu của dung dịch iodine).
+//   Sau khi nhúng iodine: có tinh bột → xanh tím; không có → vàng nâu (màu của dung dịch iodine).
 //   Lá chưa tẩy diệp lục thì màu xanh lục che gần hết màu thuốc thử.
 
 import { fmt } from '../engine.js';
@@ -17,6 +19,11 @@ const REAGENT_NAME = { iodine:'dung dịch iodine', lime:'nước vôi trong', a
 const AT = { plant:{ lx:31, ly:3, ls:10 }, bath:{ lx:-20, ly:-7, ls:8 }, dish:{ lx:-20, ly:-3.7, ls:16 } };
 const BAND = [0.36, 0.62];                           // phần lá bị bịt giấy đen (theo chiều cao lá)
 const BENCH = -13;
+// thí nghiệm 2: scene 'tn2'; o2A hiện hai cốc; t2 thời gian chiếu sáng (0..1 = 6 giờ); flip rút rong, lật ngược ống;
+// test: cách kiểm tra khí ('ember' que đóm còn tàn đỏ, 'lime' nước vôi trong, 'smell' ngửi, 'dead' que đóm đã tắt); testP tiến độ
+const TN2_OFF = { scene:'tn1', o2A:0, t2:0, dark2:0, sun2:0, flip:0, test:'ember', testP:0 };
+const O2_H = 6;                                       // giờ chiếu sáng của thí nghiệm 2 (SGK: sau 6 giờ)
+const TEST_NAME = { ember:'que đóm còn tàn đỏ', lime:'nước vôi trong', smell:'ngửi miệng ống nghiệm', dead:'que đóm đã tắt hẳn' };
 const REDUCE = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- sinh học ---------- */
@@ -146,6 +153,8 @@ function drawDish(){
   ctx.fillStyle = C['stage-2']; ctx.strokeStyle = C.glass; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.arc(X(-20), Y(1.5), 13 * sc, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
   ctx.globalAlpha = S.dishA * 0.5; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(-20), Y(1.5), 12.2 * sc, 0, Math.PI * 2); ctx.stroke();
+  // lá được nhúng trong dung dịch thuốc thử
+  if (S.drop > 0){ ctx.globalAlpha = S.dishA * 0.32 * Math.min(1, S.drop * 1.6); ctx.fillStyle = reagentColor(); ctx.beginPath(); ctx.arc(X(-20), Y(1.5), 12.2 * sc, 0, Math.PI * 2); ctx.fill(); }
   ctx.restore();
 }
 function bathLiquid(){
@@ -175,7 +184,6 @@ function drawBathFront(){
   fitText(`${SOLVENT_NAME[S.solvent]} · đun cách thủy`.replace(/^./, c => c.toUpperCase()), X(-20), Y(5), 24 * sc, { size: g.fs() + 1, weight: 700, color: C.glass });
   ctx.restore();
 }
-const DROP_AT = [[0, 0.82], [-0.25, 0.5], [0.25, 0.5], [0, 0.25], [0, 0.55]];
 function reagentColor(){ const C = g.C; return { iodine: C.iodine, lime: C.gas, alcohol: C.gas, water: C.liquid }[S.reagent]; }
 function drawDropper(){
   if (S.dropperA <= 0.01) return;
@@ -184,14 +192,9 @@ function drawDropper(){
   ctx.fillStyle = C.obj; ctx.beginPath(); ctx.ellipse(X(-13), Y(18.3), 1.1 * sc, 1.4 * sc, 0, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = col; ctx.globalAlpha = S.dropperA * 0.7; ctx.fillRect(X(-13.4), Y(16.6), 0.8 * sc, 2.4 * sc); ctx.globalAlpha = S.dropperA;
   ctx.strokeStyle = C.glass; ctx.lineWidth = 1.4; ctx.strokeRect(X(-13.4), Y(16.9), 0.8 * sc, 2.9 * sc);
-  fitText(REAGENT_NAME[S.reagent].replace(/^./, c => c.toUpperCase()), X(-11.4), Y(17.6), 16 * sc, { size: g.fs(), weight: 700, color: col, align: 'left' });
-  // các giọt rơi lần lượt xuống lá
-  ctx.fillStyle = col;
-  DROP_AT.forEach(([lx, ly], i) => {
-    const p = Math.max(0, Math.min(1, S.drop * DROP_AT.length - i)); if (p <= 0 || p >= 1) return;
-    const tx = S.lx + lx * S.ls, ty = S.ly + ly * S.ls;
-    ctx.beginPath(); ctx.arc(X(tip[0] + (tx - tip[0]) * p), Y(tip[1] + (ty - tip[1]) * p), 0.4 * sc, 0, Math.PI * 2); ctx.fill();
-  });
+  fitText('Nhúng lá vào ' + REAGENT_NAME[S.reagent], X(-11.4), Y(17.6), 22 * sc, { size: g.fs(), weight: 700, color: col, align: 'left' });
+  // dòng dung dịch rót xuống đĩa cho ngập lá
+  if (S.drop > 0 && S.drop < 1){ ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(tip[0]), Y(tip[1])); ctx.lineTo(X(tip[0] - 1), Y(tip[1] - 8 * Math.min(1, S.drop * 3))); ctx.stroke(); }
   ctx.restore();
 }
 // chú thích hai phần lá khi lá nằm trên đĩa
@@ -254,7 +257,7 @@ const CHAIN = [phPre, phCover, phLight, phPick, phBoil, phDrop];
 async function finish(h, from){ h.S.ff = 1; for (let i = from; i < CHAIN.length; i++) await CHAIN[i](h, 0.35); }
 // trạng thái cảnh sau khi xong p giai đoạn đầu của CHAIN
 function stateAfter(p, cfg = DEF){
-  const s = { ...DEF, ...cfg, preT:0, cover:0, lightT:0, attached:1, ...AT.plant, dishA:0, bathA:0, boil:0, rinse:0, drop:0, dropperA:0, darkA:0, sunA:0, ff:0 };
+  const s = { ...DEF, ...cfg, preT:0, cover:0, lightT:0, attached:1, ...AT.plant, dishA:0, bathA:0, boil:0, rinse:0, drop:0, dropperA:0, darkA:0, sunA:0, ff:0, ...TN2_OFF };
   if (p >= 1) s.preT = 1;
   if (p >= 2 && s.strip) s.cover = 1;
   if (p >= 3){ s.lightT = 1; if (!s.covered) s.cover = 0; }
@@ -265,8 +268,114 @@ function stateAfter(p, cfg = DEF){
 }
 const DONE_AT = [0, 1, 3, 5, 6];   // số giai đoạn đã xong khi bắt đầu mỗi bước SGK
 
+/* ---------- thí nghiệm 2: rong đuôi chó thải khí oxygen ---------- */
+const CUP2 = [{ id:'A', x:-21 }, { id:'B', x:9 }];
+const gasOf = (S, id) => (id === 'B' ? 0.34 : 0.015) * S.t2;      // phần ống nghiệm chứa khí (minh họa)
+function drawRong(x, y0, y1){
+  const { ctx, X, Y, C, sc } = g, now = REDUCE ? 0 : performance.now() / 1000;
+  ctx.save(); ctx.strokeStyle = C.leaf; ctx.lineWidth = Math.max(1.5, 0.16 * sc); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(X(x), Y(y0)); ctx.lineTo(X(x + 0.1 * Math.sin(now)), Y(y1)); ctx.stroke();
+  ctx.lineWidth = Math.max(1, 0.09 * sc);
+  for (let y = y0 + 0.6; y < y1; y += 0.75){ for (const d of [-1, 1]){ ctx.beginPath(); ctx.moveTo(X(x), Y(y)); ctx.lineTo(X(x + d * 0.75), Y(y + 0.45)); ctx.stroke(); } }
+  ctx.restore();
+}
+function drawTN2(){
+  if (S.o2A <= 0.01) return;
+  const { ctx, X, Y, C, sc } = g, W = 1.25, now = REDUCE ? 0 : performance.now() / 1000;
+  ctx.save(); ctx.globalAlpha = S.o2A;
+  for (const cup of CUP2){
+    const x = cup.x, gas = gasOf(S, cup.id), L = 17, mouth = -10, top = mouth + L;
+    // cốc nước
+    ctx.save(); ctx.fillStyle = C.liquid; ctx.globalAlpha *= .28; ctx.fillRect(X(x - 5.6), Y(0), 11.2 * sc, (0 - BENCH) * sc); ctx.restore();
+    ctx.strokeStyle = C.glass; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X(x - 6), Y(2)); ctx.lineTo(X(x - 6), Y(BENCH)); ctx.lineTo(X(x + 6), Y(BENCH)); ctx.lineTo(X(x + 6), Y(2)); ctx.stroke();
+    // ống nghiệm úp ngược trong cốc, đầy nước, có cành rong
+    const inA = 1 - S.flip;
+    if (inA > 0.01){
+      ctx.save(); ctx.globalAlpha *= inA;
+      const gasY = top - gas * L;
+      ctx.save(); ctx.fillStyle = C.liquid; ctx.globalAlpha *= .3; ctx.fillRect(X(x - W), Y(gasY), 2 * W * sc, (gasY - mouth) * sc); ctx.restore();
+      if (gas > 0.005){ ctx.save(); ctx.fillStyle = C.gas; ctx.globalAlpha *= .35; ctx.fillRect(X(x - W), Y(top), 2 * W * sc, (top - gasY) * sc); ctx.restore(); }
+      ctx.strokeStyle = C.glass; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(X(x - W), Y(mouth)); ctx.lineTo(X(x - W), Y(top - W)); ctx.arc(X(x), Y(top - W), W * sc, Math.PI, 0); ctx.lineTo(X(x + W), Y(mouth)); ctx.stroke();
+      drawRong(x, mouth + 0.3, mouth + 8.5);
+      // bọt khí nhỏ li ti từ cành rong (chỉ khi đang được chiếu sáng)
+      if (cup.id === 'B' && S.sun2 > 0.5 && S.t2 < 1){
+        ctx.strokeStyle = C.gas; ctx.lineWidth = 1;
+        for (let i = 0; i < 10; i++){ const sd = Math.sin(i * 12.9898) * 43758.5453, r = sd - Math.floor(sd), p = (now * (0.5 + r) + r * 3) % 1, y = mouth + 7 + p * (gasY - mouth - 7); ctx.beginPath(); ctx.arc(X(x + (r * 2 - 1) * 0.7), Y(y), 0.12 * sc, 0, Math.PI * 2); ctx.stroke(); }
+      }
+      ctx.restore();
+    }
+    // ống đã rút ra, bịt kín, lật ngược (miệng ống hướng lên), để kiểm tra khí
+    if (S.flip > 0.01){
+      const ux = x + 10, ub = -11, ut = 5;
+      ctx.save(); ctx.globalAlpha *= S.flip;
+      const waterTop = ub + (1 - gas) * (ut - ub) * 0.6;
+      ctx.save(); ctx.fillStyle = C.liquid; ctx.globalAlpha *= .3; ctx.fillRect(X(ux - W), Y(waterTop), 2 * W * sc, (waterTop - ub) * sc); ctx.restore();
+      if (gas > 0.005){ ctx.save(); ctx.fillStyle = C.gas; ctx.globalAlpha *= .3; ctx.fillRect(X(ux - W), Y(ut), 2 * W * sc, (ut - waterTop) * sc); ctx.restore(); }
+      if (S.test === 'lime' && S.testP > 0.3){ ctx.save(); ctx.fillStyle = C.gas; ctx.globalAlpha *= .5; ctx.fillRect(X(ux - W), Y(waterTop + 0.8), 2 * W * sc, 0.8 * sc); ctx.restore(); }
+      ctx.strokeStyle = C.glass; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(X(ux - W), Y(ut)); ctx.lineTo(X(ux - W), Y(ub + W)); ctx.arc(X(ux), Y(ub + W), W * sc, Math.PI, 0, true); ctx.lineTo(X(ux + W), Y(ut)); ctx.stroke();
+      ctx.strokeStyle = C['stage-line']; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(ux - 2.6), Y(-4)); ctx.lineTo(X(ux + 2.6), Y(-4)); ctx.moveTo(X(ux - 2.2), Y(-4)); ctx.lineTo(X(ux - 2.2), Y(BENCH)); ctx.moveTo(X(ux + 2.2), Y(-4)); ctx.lineTo(X(ux + 2.2), Y(BENCH)); ctx.stroke();
+      drawTest(ux, ut, cup.id, gas);
+      ctx.restore();
+    }
+    g.text(`Cốc ${cup.id}`, X(x), Y(12.8), { color: cup.id === 'B' ? C.obj : C.glass, weight: 700, size: g.fs() + 2 });
+    g.text(cup.id === 'A' ? 'Để trong tối' : 'Để ra chỗ nắng', X(x), Y(-15), { size: g.fs() + 1, color: cup.id === 'A' ? C['stage-muted'] : C.beam, weight: 600 });
+  }
+  // chỗ tối phủ cốc A, ánh nắng chiếu cốc B
+  if (S.dark2 > 0.01){
+    ctx.save(); ctx.globalAlpha = S.o2A * S.dark2 * .8; ctx.fillStyle = C.stage; g.rr(X(-28), Y(11), 14 * sc, 24 * sc, 10); ctx.fill();
+    ctx.globalAlpha = S.o2A * S.dark2; ctx.strokeStyle = C['stage-muted']; ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]); ctx.stroke(); ctx.setLineDash([]);
+    g.text('Chỗ tối', X(-21), Y(9.6), { color: C['stage-muted'], weight: 700 }); ctx.restore();
+  }
+  if (S.sun2 > 0.01){
+    const cx = 24, cy = 15;
+    ctx.save(); ctx.globalAlpha = S.o2A * S.sun2; ctx.fillStyle = C.beam; ctx.shadowColor = C.beam; ctx.shadowBlur = 18;
+    ctx.beginPath(); ctx.arc(X(cx), Y(cy), 2 * sc, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.strokeStyle = C.beam; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    for (let i = 0; i < 8; i++){ const a = i * Math.PI / 4 + now * 0.3; ctx.beginPath(); ctx.moveTo(X(cx + Math.cos(a) * 2.8), Y(cy + Math.sin(a) * 2.8)); ctx.lineTo(X(cx + Math.cos(a) * 3.8), Y(cy + Math.sin(a) * 3.8)); ctx.stroke(); }
+    ctx.globalAlpha *= .35; ctx.setLineDash([3, 7]); ctx.lineDashOffset = -now * 20;
+    for (const [x, y] of [[7, 6], [10, 2], [13, 7]]){ ctx.beginPath(); ctx.moveTo(X(cx - 2), Y(cy - 2)); ctx.lineTo(X(x), Y(y)); ctx.stroke(); }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+// kiểm tra khí ở miệng ống
+function drawTest(ux, ut, id, gas){
+  if (S.testP <= 0.01) return;
+  const { ctx, X, Y, C, sc } = g, p = S.testP, done = p > 0.97;
+  if (S.test === 'ember' || S.test === 'dead'){
+    const tx = ux + 0.2, ty = ut + 0.8 + (1 - Math.min(1, p * 1.3)) * 5;
+    ctx.strokeStyle = C.paper; ctx.lineWidth = Math.max(2, 0.22 * sc); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(X(tx), Y(ty)); ctx.lineTo(X(tx + 4), Y(ty + 4.5)); ctx.stroke();
+    if (S.test === 'ember'){
+      const flare = done && id === 'B' && gas > 0.1;
+      ctx.save(); ctx.fillStyle = C.warm; ctx.shadowColor = C.warm; ctx.shadowBlur = flare ? 22 : 8;
+      if (flare){ ctx.beginPath(); ctx.moveTo(X(tx - 0.7), Y(ty)); ctx.quadraticCurveTo(X(tx - 0.2), Y(ty + 3.2), X(tx), Y(ty + 3.4)); ctx.quadraticCurveTo(X(tx + 0.9), Y(ty + 1.2), X(tx + 0.7), Y(ty)); ctx.closePath(); ctx.fill(); ctx.fillStyle = C.beam; ctx.beginPath(); ctx.arc(X(tx), Y(ty + 0.5), 0.45 * sc, 0, Math.PI * 2); ctx.fill(); }
+      else { ctx.beginPath(); ctx.arc(X(tx), Y(ty), 0.28 * sc, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    }
+  }
+  if (!done) return;
+  const word = testWord(id, gas);
+  fitText(word, X(ux), Y(ut + 7.2), 12 * sc, { size: g.fs(), weight: 700, align: 'center', color: word.startsWith('Que đóm bùng') ? C.warm : C['stage-muted'] });
+}
+function testWord(id, gas){
+  if (S.test === 'ember') return id === 'B' && gas > 0.1 ? 'Que đóm bùng cháy' : 'Không bùng cháy';
+  if (S.test === 'dead') return 'Không có gì xảy ra';
+  if (S.test === 'lime') return 'Nước vôi vẫn trong';
+  return 'Không nhận ra mùi gì';
+}
+async function ph2Setup(h){ await h.tw({ o2A:1 }, 800); }
+async function ph2Light(h, k = 1){ await h.tw({ dark2:1, sun2:1 }, 500 * k); await h.tw({ t2:1 }, 4200 * k); await h.tw({ dark2:0, sun2:0 }, 500 * k); }
+async function ph2Flip(h){ await h.tw({ flip:1 }, 1400); }
+function stateTN2(p){
+  const s = { ...stateAfter(0), scene:'tn2', o2A:1 };
+  if (p >= 1) s.t2 = 1;
+  if (p >= 2) s.flip = 1;
+  return s;
+}
+
 /* ---------- câu hỏi mồi ---------- */
-const REF24 = 'SGK KHTN 7 · Bài 24 Thực hành: Chứng minh quang hợp ở cây xanh';
+const REF24 = 'SGK KHTN 7 · Bài 24 Thực hành: Chứng minh quang hợp ở cây xanh (tr. 108–110)';
 const questions = [
   { id:'q1', short:'Để cây ở đâu 2 ngày trước thí nghiệm?', tag:'Chuẩn bị cây',
     text:'Trước khi bịt lá, cần để chậu cây khoai lang ở đâu trong 2 ngày?',
@@ -286,7 +395,7 @@ const questions = [
     ],
     hint2:'Gợi ý: khi không có ánh sáng, lá có tạo thêm tinh bột được không? Tinh bột cũ trong lá sẽ được dùng dần đi.',
     right:'Để cây trong tối 2 ngày thì lá không tạo thêm tinh bột, tinh bột có sẵn được chuyển đi và dùng hết. Nhờ vậy, tinh bột tìm thấy sau thí nghiệm chắc chắn là do lá mới tạo ra.',
-    ref: REF24 },
+    ref: REF24 + ' · Thí nghiệm 1' },
   { id:'q2', short:'Bịt lá xong, đưa cây đi đâu?', tag:'Ánh sáng',
     text:'Một phần lá đã được bịt kín hai mặt bằng băng giấy đen. Tiếp theo, em làm gì với chậu cây?',
     opts:['Để tiếp trong chỗ tối 4–6 giờ','Đem ra chỗ nắng 5 phút','Bỏ băng giấy đen, rồi đem ra chỗ nắng 4–6 giờ','Giữ băng giấy đen, đem ra chỗ nắng 4–6 giờ'], answer:3,
@@ -305,10 +414,10 @@ const questions = [
     ],
     hint2:'Gợi ý: muốn biết lá có cần ánh sáng không, em cần một phần lá có ánh sáng và một phần lá không có ánh sáng, trên cùng một chiếc lá.',
     right:'Phần lá không bịt nhận được ánh sáng, phần bịt giấy đen thì không. Hai phần cùng một chiếc lá, chỉ khác nhau ở ánh sáng, nên so sánh được.',
-    ref: REF24 },
+    ref: REF24 + ' · Thí nghiệm 1' },
   { id:'q3', short:'Đun lá trong chất gì để tẩy màu xanh?', tag:'Tẩy diệp lục',
     text:'Lá đang có màu xanh lục của chất diệp lục. Trước khi thử tinh bột, em đun cách thủy lá trong chất nào?',
-    opts:['Nước lã','Nước muối','Cồn 90°','Không cần đun, nhỏ thuốc thử luôn'], answer:2,
+    opts:['Nước lã','Nước muối','Cồn 90°','Không cần đun, nhúng vào thuốc thử luôn'], answer:2,
     cfg:['water', 'salt', 'alcohol', 'none'],
     async sim(h, c){
       h.S.solvent = this.cfg[c];
@@ -318,15 +427,15 @@ const questions = [
     async reset(h){ Object.assign(h.S, stateAfter(4)); await h.wait(200); },
     wrong:[
       'Đun trong nước, lá vẫn còn xanh lục vì chất diệp lục không tan trong nước. Màu xanh lục che mất màu của thuốc thử, khó phân biệt hai phần lá.',
-      'Nước muối cũng không hòa tan được chất diệp lục, lá vẫn xanh lục. Sau khi nhỏ thuốc thử, rất khó nhìn ra màu.',
+      'Nước muối cũng không hòa tan được chất diệp lục, lá vẫn xanh lục. Sau khi nhúng vào thuốc thử, rất khó nhìn ra màu.',
       null,
-      'Lá còn nguyên màu xanh lục nên sau khi nhỏ thuốc thử, hai phần lá gần như cùng một màu sẫm.'
+      'Lá còn nguyên màu xanh lục nên sau khi nhúng vào thuốc thử, hai phần lá gần như cùng một màu sẫm.'
     ],
     hint2:'Gợi ý: cần một chất hòa tan được chất diệp lục. Chất đó dễ cháy nên phải đun cách thủy, không đun trực tiếp trên lửa.',
     right:'Cồn 90° hòa tan chất diệp lục: lá bạc màu, cồn chuyển sang màu xanh lục. Cồn dễ cháy nên phải đun cách thủy. Sau đó rửa lá trong nước ấm.',
-    ref: REF24 },
+    ref: REF24 + ' · Thí nghiệm 1' },
   { id:'q4', short:'Thuốc thử nào nhận biết tinh bột?', tag:'Thử tinh bột',
-    text:'Nhỏ vài giọt chất nào lên lá để biết chỗ nào có tinh bột?',
+    text:'Nhúng lá vào dung dịch nào để biết chỗ nào trên lá có tinh bột?',
     opts:['Dung dịch iodine','Nước vôi trong','Cồn 90°','Nước cất'], answer:0,
     cfg:['iodine', 'lime', 'alcohol', 'water'],
     async sim(h, c){ h.S.reagent = this.cfg[c]; await phDrop(h, 1); },
@@ -339,14 +448,32 @@ const questions = [
     ],
     hint2:'Gợi ý: có một dung dịch màu vàng nâu, gặp tinh bột thì chuyển sang màu xanh tím.',
     right:'Dung dịch iodine làm tinh bột chuyển màu xanh tím. Phần lá không bịt có màu xanh tím: có tinh bột. Phần bịt giấy đen không có màu xanh tím: không có tinh bột.',
-    ref: REF24 }
+    ref: REF24 + ' · Thí nghiệm 1' },
+  { id:'q5', short:'Kiểm tra khí oxygen bằng gì?', tag:'Khí oxygen',
+    text:'Sau 6 giờ, ống nghiệm ở cốc B có một lớp khí. Em làm gì để biết khí đó là oxygen?',
+    opts:['Đưa que đóm còn tàn đỏ vào miệng ống','Rót nước vôi trong vào ống','Ngửi miệng ống nghiệm','Đưa que đóm đã tắt hẳn vào miệng ống'], answer:0,
+    cfg:['ember', 'lime', 'smell', 'dead'],
+    async sim(h, c){ h.S.test = this.cfg[c]; h.S.testP = 0; await h.tw({ testP:1 }, 1600); await h.wait(700); },
+    async reset(h){ await h.tw({ testP:0 }, 300); h.S.test = 'ember'; },
+    wrong:[
+      null,
+      'Nước vôi trong dùng để nhận biết khí carbon dioxide (vẩn đục khi gặp khí này). Ở đây nước vôi vẫn trong, nên chưa biết khí đó có phải oxygen không.',
+      'Không được ngửi trực tiếp khí trong ống nghiệm. Hơn nữa, khí oxygen không màu, không mùi nên ngửi cũng không nhận ra.',
+      'Que đóm đã tắt hẳn thì không còn tàn đỏ để bùng lên, nên không thấy gì xảy ra.'
+    ],
+    hint2:'Gợi ý: khí oxygen duy trì sự cháy. Một vật đang cháy âm ỉ gặp nhiều oxygen thì sẽ thế nào?',
+    right:'Que đóm còn tàn đỏ bùng cháy ở ống của cốc B: khí đó là oxygen, vì oxygen duy trì sự cháy. Ống của cốc A (trong tối) gần như không có khí, que đóm không bùng cháy.',
+    ref: REF24 + ' · Thí nghiệm 2' }
 ];
 
 /* ---------- các bước ---------- */
-const CONCLUSION = `<div class="concl-wrap"><table class="concl"><thead><tr><th>Phần lá</th><th>Ánh sáng</th><th>Nhỏ iodine</th><th>Tinh bột</th></tr></thead><tbody>
+const CONCLUSION = `<div class="concl-wrap"><table class="concl"><thead><tr><th>Phần lá</th><th>Ánh sáng</th><th>Nhúng iodine</th><th>Tinh bột</th></tr></thead><tbody>
 <tr><th>Không bịt</th><td>Có</td><td>Xanh tím</td><td>Có</td></tr>
 <tr><th>Bịt giấy đen</th><td>Không</td><td>Không có màu xanh tím</td><td>Không</td></tr></tbody></table>
-<p>Lá cây chỉ tạo ra tinh bột khi được chiếu sáng.</p></div>`;
+<table class="concl"><thead><tr><th>Cốc</th><th>Ánh sáng</th><th>Ống nghiệm</th><th>Que đóm còn tàn đỏ</th></tr></thead><tbody>
+<tr><th>A</th><td>Để trong tối</td><td>Gần như không có khí</td><td>Không bùng cháy</td></tr>
+<tr><th>B</th><td>Để ra chỗ nắng</td><td>Có lớp khí ở đầu ống</td><td>Bùng cháy: khí oxygen</td></tr></tbody></table>
+<p>Lá cây tạo ra tinh bột và thải ra khí oxygen khi quang hợp; quang hợp chỉ xảy ra khi có ánh sáng.</p></div>`;
 
 const steps = [
   { title:'Chuẩn bị cây', q:true,
@@ -359,14 +486,14 @@ const steps = [
     async run(h){ await h.wait(400); await h.ask('q1'); } },
   { title:'Bịt lá, chiếu sáng', q:true,
     sgk:'Dùng băng giấy đen bịt kín một phần lá ở cả hai mặt. Sau đó đặt chậu cây ở một nơi trong 4–6 giờ.',
-    note:'Đem cây ra chỗ có nắng (hoặc chiếu đèn) 4–6 giờ. Phần lá không bịt nhận được ánh sáng; phần bịt giấy đen không nhận được ánh sáng.',
+    note:'Đem cây ra chỗ có nắng (hoặc chiếu bóng đèn điện 500 W) 4–6 giờ. Phần lá không bịt nhận được ánh sáng; phần bịt giấy đen không nhận được ánh sáng.',
     chips:[
       { q:'Vì sao phải bịt cả hai mặt lá?', a:'Ánh sáng có thể chiếu vào lá từ cả hai mặt. Bịt kín hai mặt thì phần lá đó hoàn toàn không nhận được ánh sáng.' },
-      { q:'Không có nắng thì làm thế nào?', a:'Có thể chiếu sáng bằng bóng đèn điện thay cho ánh nắng.' } ],
+      { q:'Không có nắng thì làm thế nào?', a:'Có thể chiếu sáng bằng bóng đèn điện (SGK dùng bóng đèn 500 W) thay cho ánh nắng, trong 4–6 giờ.' } ],
     setup(S){ Object.assign(S, stateAfter(DONE_AT[1])); },
     async run(h){ await phCover(h, 1); await h.wait(300); await h.ask('q2'); } },
   { title:'Tẩy màu lá', q:true,
-    sgk:'Ngắt chiếc lá thí nghiệm, bỏ băng giấy đen. Cho lá vào một chất lỏng, đun cách thủy để tẩy hết màu xanh của chất diệp lục. Rửa sạch lá trong cốc nước ấm.',
+    sgk:'Ngắt chiếc lá thí nghiệm, bỏ băng giấy đen. Cho lá vào một chất lỏng, đun sôi cách thủy để tẩy hết màu xanh của chất diệp lục. Rửa sạch lá trong cốc nước ấm (khoảng 40 °C).',
     note:'Cồn 90° hòa tan chất diệp lục: lá bạc màu, cồn chuyển xanh lục. Lá bạc màu giúp nhìn rõ màu của thuốc thử ở bước sau.',
     chips:[
       { q:'Đun cách thủy là gì?', a:'Là đặt cốc cồn vào trong một nồi nước rồi đun nồi nước, không đặt cốc cồn trực tiếp lên lửa. Cồn dễ cháy nên phải đun cách thủy cho an toàn.' },
@@ -374,19 +501,35 @@ const steps = [
     setup(S){ Object.assign(S, stateAfter(DONE_AT[2])); },
     async run(h){ await phPick(h, 1); await h.wait(300); await h.ask('q3'); } },
   { title:'Thử tinh bột', q:true,
-    sgk:'Cho lá vào đĩa petri, nhỏ vài giọt thuốc thử tinh bột lên lá. Quan sát màu của phần lá bịt giấy đen và phần lá không bịt.',
+    sgk:'Nhúng lá vào dung dịch thuốc thử tinh bột (đựng trong đĩa petri). Quan sát màu của phần lá bịt giấy đen và phần lá không bịt.',
     note:'Phần lá không bịt có màu xanh tím: có tinh bột. Phần bịt giấy đen không có màu xanh tím: không có tinh bột.',
     chips:[
       { q:'Vì sao phần bịt không có tinh bột?', a:'Phần bịt giấy đen không nhận được ánh sáng nên không quang hợp, không tạo ra tinh bột. Tinh bột cũ thì đã hết từ khi để cây trong tối 2 ngày.' },
       { q:'Iodine gặp tinh bột thì sao?', a:'Dung dịch iodine màu vàng nâu, gặp tinh bột thì chuyển sang màu xanh tím. Vì vậy iodine dùng để nhận biết tinh bột.' } ],
     setup(S){ Object.assign(S, stateAfter(DONE_AT[3])); },
     async run(h){ await h.wait(400); await h.ask('q4'); } },
+  { title:'Thí nghiệm 2: rong đuôi chó', 
+    sgk:'Cho hai cành rong đuôi chó vào hai ống nghiệm đầy nước, úp ngược ống vào hai cốc nước A và B sao cho không có bọt khí lọt vào. Để cốc A vào chỗ tối (hoặc bọc giấy đen), cốc B ra chỗ nắng.',
+    note:'Sau 6 giờ: ở cốc B có nhiều bọt khí nhỏ li ti thoát ra từ cành rong, tích lại thành lớp khí ở đầu ống nghiệm. Ở cốc A gần như không có khí.',
+    chips:[
+      { q:'Rong đuôi chó là cây gì?', a:'Rong đuôi chó là một loại cây sống chìm trong nước, hay được thả trong bể cá cảnh. Vì sống trong nước nên dễ thấy bọt khí do nó thải ra.' },
+      { q:'Vì sao cốc A để trong tối?', a:'Để so sánh: hai cốc chỉ khác nhau ở ánh sáng. Cốc để trong tối không quang hợp được nên gần như không có khí.' } ],
+    setup(S){ Object.assign(S, stateTN2(0)); S.o2A = 0; },
+    async run(h){ await ph2Setup(h); await h.wait(300); await ph2Light(h); } },
+  { title:'Kiểm tra khí bằng que đóm', q:true,
+    sgk:'Nhẹ nhàng rút cành rong ra, bịt kín miệng ống nghiệm, lấy ống ra và lật ngược lại. Kiểm tra khí trong ống ở miệng ống nghiệm.',
+    note:'Que đóm còn tàn đỏ bùng cháy ở ống của cốc B: khí đó là oxygen. Ở ống của cốc A, que đóm không bùng cháy. Vậy cây xanh thải khí oxygen khi quang hợp, và cần có ánh sáng.',
+    chips:[
+      { q:'Vì sao que đóm bùng cháy?', a:'Khí oxygen duy trì sự cháy. Que đóm còn tàn đỏ gặp nhiều oxygen thì cháy bùng lên.' },
+      { q:'Thả rong trong bể cá có lợi gì?', a:'Khi được chiếu sáng, rong quang hợp và thải khí oxygen vào nước, giúp cá có thêm oxygen để hô hấp.' } ],
+    setup(S){ Object.assign(S, stateTN2(1)); },
+    async run(h){ await ph2Flip(h); await h.wait(300); await h.ask('q5'); } },
   { title:'Kết luận',
-    sgk:'So sánh màu hai phần lá, rút ra kết luận về vai trò của ánh sáng.',
-    note:'Lá cây chỉ tạo ra tinh bột khi được chiếu sáng.',
+    sgk:'Hoàn thành bảng kết quả hai thí nghiệm, rút ra kết luận về sản phẩm của quang hợp và vai trò của ánh sáng.',
+    note:'Lá cây tạo ra tinh bột và thải ra khí oxygen khi quang hợp. Quang hợp chỉ xảy ra khi có ánh sáng.',
     html: CONCLUSION,
     chips:[
-      { q:'Tóm tắt giúp em bài này', a:'Để cây trong tối 2 ngày cho hết tinh bột cũ, bịt một phần lá bằng giấy đen rồi chiếu sáng. Tẩy diệp lục bằng cồn, nhỏ iodine: chỉ phần lá được chiếu sáng có màu xanh tím. Vậy lá chỉ tạo tinh bột khi có ánh sáng.' },
+      { q:'Tóm tắt giúp em bài này', a:'Thí nghiệm 1: để cây trong tối 2 ngày, bịt một phần lá bằng giấy đen rồi chiếu sáng; tẩy diệp lục bằng cồn, nhúng iodine thì chỉ phần lá được chiếu sáng có màu xanh tím. Thí nghiệm 2: rong đuôi chó ngoài nắng thải ra khí làm que đóm còn tàn đỏ bùng cháy, đó là oxygen. Vậy quang hợp tạo ra tinh bột, thải oxygen và cần ánh sáng.' },
       { q:'Vì sao trồng cây cần đủ ánh sáng?', a:'Cây cần ánh sáng để quang hợp, tạo ra chất hữu cơ nuôi cây. Thiếu ánh sáng thì cây tạo ít chất hữu cơ, phát triển kém.' } ],
     setup(S){ Object.assign(S, stateAfter(DONE_AT[4])); },
     async run(h){ await h.wait(200); } }
@@ -407,7 +550,7 @@ const STAGES = [
     options:[{ value:'long', label:'Ra chỗ nắng 4–6 giờ', short:'Nắng 4–6 giờ' }, { value:'short', label:'Ra chỗ nắng 5 phút', short:'Nắng 5 phút' }, { value:'dark', label:'Để tiếp trong chỗ tối', short:'Trong tối' }] },
   { key:'solvent', title:'Bước 4 · Ngắt lá, tẩy màu', label:'Ngắt lá, bỏ băng giấy, rồi đun cách thủy lá trong', icon:DISH_ICON, to:5, phases:[phPick, phBoil],
     options:[{ value:'alcohol', label:'Cồn 90°' }, { value:'water', label:'Nước lã' }, { value:'none', label:'Không tẩy màu', short:'Không tẩy' }] },
-  { key:'reagent', title:'Bước 5 · Nhỏ thuốc thử', label:'Nhỏ lên lá vài giọt', icon:DISH_ICON, to:6, phases:[phDrop],
+  { key:'reagent', title:'Bước 5 · Thử tinh bột', label:'Nhúng lá vào', icon:DISH_ICON, to:6, phases:[phDrop],
     options:[{ value:'iodine', label:'Dung dịch iodine', short:'Iodine' }, { value:'lime', label:'Nước vôi trong', short:'Nước vôi' }, { value:'water', label:'Nước cất' }] }
 ];
 const LIGHT_OF = { long: LIGHT_H, short: 5 / 60, dark: 0 };
@@ -472,38 +615,45 @@ const free = {
   },
   drag: { hit: () => null, move: () => ({}), items: () => [], nudge: () => ({}) },
   chips: [
-    { q:'Bỏ bước để trong tối thì sao?', a:'Lá còn tinh bột cũ tạo ra từ những ngày trước, nên cả lá đều xanh tím khi nhỏ iodine. Khi đó không biết tinh bột nào do lá mới tạo ra.' },
+    { q:'Bỏ bước để trong tối thì sao?', a:'Lá còn tinh bột cũ tạo ra từ những ngày trước, nên cả lá đều xanh tím khi nhúng vào iodine. Khi đó không biết tinh bột nào do lá mới tạo ra.' },
     { q:'Vì sao phải tẩy màu lá?', a:'Màu xanh lục của chất diệp lục che màu xanh tím của iodine. Đun lá trong cồn 90° (cách thủy) để tẩy diệp lục thì nhìn rõ màu hơn.' } ]
 };
 
 export default {
   id: 'quang-hop',
   grade: 'KHTN 7', chapter: 'Chương VII Trao đổi chất và chuyển hóa năng lượng ở sinh vật', lesson: 'Bài 24',
-  title: 'Chứng minh quang hợp tạo ra tinh bột', shortTitle: 'Quang hợp tạo tinh bột',
-  intro: 'Bịt một phần lá khoai lang bằng giấy đen, chiếu sáng, rồi thử tinh bột bằng iodine. Giữa chừng, trợ lý AI ở góc phải sẽ hỏi em. Chọn sai thì thí nghiệm chạy đúng theo lựa chọn của em, để em tự thấy kết quả.',
-  canvasLabel: 'Chậu cây khoai lang có một chiếc lá được chọn làm thí nghiệm; bên phải là chỗ đun cách thủy và đĩa petri để thử tinh bột',
+  title: 'Chứng minh quang hợp ở cây xanh', shortTitle: 'Quang hợp ở cây xanh',
+  intro: 'Hai thí nghiệm trong SGK: lá khoai lang tạo ra tinh bột khi được chiếu sáng, và rong đuôi chó thải khí oxygen. Giữa chừng có câu hỏi mồi; chọn sai thì thí nghiệm chạy đúng theo lựa chọn của em.',
+  canvasLabel: 'Thí nghiệm 1: chậu cây khoai lang, chỗ đun cách thủy và đĩa petri. Thí nghiệm 2: hai cốc nước có ống nghiệm úp ngược chứa rong đuôi chó',
   readyTitle: 'Chậu cây đã sẵn sàng',
   footer: 'Mô phỏng phục vụ dạy học. Thời gian được tua nhanh; đậm nhạt của màu chỉ để minh họa, không phải số đo thật.',
   view: { w: 80, h: 40, ox: 0.5, oy: 0.5 },
   startChips: [
-    { q:'Thí nghiệm này để làm gì?', a:'Thí nghiệm chứng minh lá cây tạo ra tinh bột khi quang hợp, và chỉ tạo ra tinh bột khi được chiếu sáng.' },
-    { q:'Làm sao biết lá có tinh bột?', a:'Nhỏ dung dịch iodine lên lá. Chỗ nào có tinh bột sẽ chuyển sang màu xanh tím.' } ],
+    { q:'Thí nghiệm này để làm gì?', a:'Hai thí nghiệm chứng minh khi quang hợp, cây xanh tạo ra tinh bột và thải ra khí oxygen, và quang hợp cần có ánh sáng.' },
+    { q:'Làm sao biết lá có tinh bột?', a:'Nhúng lá vào dung dịch iodine. Chỗ nào có tinh bột sẽ chuyển sang màu xanh tím.' } ],
   base(S){ Object.assign(S, stateAfter(0)); },
   rest(){},
   draw(_g, _S){
     g = _g; S = _S;
     const { C } = g;
+    if (S.scene === 'tn2'){ drawBench(); drawTN2(); return; }
     drawBench(); drawDish(); drawBathBack();
     if (!S.attached) drawLeaf(S.lx, S.ly, S.ls, leafColor('open'), S.strip ? leafColor('band') : null, 0);
     drawBathFront(); drawPlant();
     if (S.attached) drawLeaf(S.lx, S.ly, S.ls, leafColor('open'), null, S.cover);
     drawEnv(); drawDropper(); drawLabels();
-    if (S.rinse) g.text('Rửa lá trong cốc nước ấm', g.X(-20), g.Y(-15), { color: C.glass, weight: 700 });
+    if (S.rinse) g.text('Rửa lá trong cốc nước ấm (khoảng 40 °C)', g.X(-20), g.Y(-15), { color: C.glass, weight: 700 });
     if (S.ff) g.text('Tua nhanh tới kết quả', g.X(0), g.Y(18.4), { color: C.beam, weight: 700, size: g.fs() + 1 });
   },
   readout(S){
     const tail = ' (tua nhanh)';
-    if (S.drop > 0) return `Đã nhỏ ${REAGENT_NAME[S.reagent]} lên lá`;
+    if (S.scene === 'tn2'){
+      if (S.testP > 0.97) return `Kiểm tra bằng ${TEST_NAME[S.test]}`;
+      if (S.flip > 0) return 'Đã rút cành rong, bịt kín và lật ngược ống nghiệm';
+      if (S.t2 > 0) return `Cốc A trong tối, cốc B ngoài nắng: ${fmt(O2_H * S.t2)} giờ${tail}`;
+      return S.o2A > 0.5 ? 'Thí nghiệm 2: hai cốc rong đuôi chó' : '';
+    }
+    if (S.drop > 0) return `Đã nhúng lá vào ${REAGENT_NAME[S.reagent]}`;
     if (S.boil > 0 && S.solvent !== 'none') return S.boil < 1 ? `Đun cách thủy lá trong ${SOLVENT_NAME[S.solvent]}` : `Đã đun lá trong ${SOLVENT_NAME[S.solvent]}, rửa nước ấm`;
     if (!S.attached) return 'Đã ngắt lá, bỏ băng giấy đen';
     if (S.lightT > 0) return S.hours > 0 ? `Chiếu sáng: ${hoursText(S.hours * S.lightT)}${tail}` : `Để tiếp trong tối: ${fmt(LIGHT_H * S.lightT)} giờ${tail}`;
@@ -511,7 +661,17 @@ export default {
     return '';
   },
   describe(S){
-    const L = ['Chậu cây khoai lang, một chiếc lá được chọn làm thí nghiệm. Bên phải có nồi đun cách thủy và đĩa petri.'];
+    if (S.scene === 'tn2'){
+      const L = ['Thí nghiệm 2: hai cành rong đuôi chó trong hai ống nghiệm đầy nước, úp ngược trong hai cốc nước A và B. Cốc A để trong tối, cốc B để ra chỗ nắng.'];
+      if (S.t2 > 0) L.push(`Đã để ${fmt(O2_H * S.t2)} giờ (tua nhanh). Ống ở cốc B có ${S.t2 > 0.3 ? 'một lớp khí ở đầu ống, do nhiều bọt khí nhỏ từ cành rong tích lại' : 'bọt khí nhỏ thoát ra từ cành rong'}; ống ở cốc A gần như không có khí.`);
+      if (S.flip > 0.5) L.push('Đã rút cành rong ra, bịt kín miệng ống, lấy ra và lật ngược ống nghiệm (miệng ống hướng lên).');
+      if (S.testP > 0.97){
+        L.push(`Đã kiểm tra khí bằng ${TEST_NAME[S.test]}.`);
+        L.push(`Kết quả ở ống cốc B: ${testWord('B', gasOf(S, 'B')).toLowerCase()}; ở ống cốc A: ${testWord('A', gasOf(S, 'A')).toLowerCase()}.`);
+      }
+      return L;
+    }
+    const L = ['Chậu cây khoai lang, một chiếc lá được chọn làm thí nghiệm. Bên trái có nồi đun cách thủy và đĩa petri.'];
     if (S.preT >= 1) L.push(S.pre === 'none' ? 'Cây không được để trong tối trước khi thí nghiệm.' : `Cây đã được để ${PRE_NAME[S.pre]} 2 ngày.`);
     else if (S.preT > 0) L.push(`Cây đang được để ${PRE_NAME[S.pre]}.`);
     if (S.strip && (S.cover > 0.5 || S.lightT > 0)) L.push('Một phần lá được bịt kín hai mặt bằng băng giấy đen' + (S.covered ? '.' : ', nhưng băng giấy đã được bỏ ra trước khi chiếu sáng.'));
@@ -522,7 +682,7 @@ export default {
     if (S.boil > 0) L.push(S.solvent === 'none' ? 'Lá không được đun tẩy màu, vẫn còn xanh lục.'
       : `Lá được đun cách thủy trong ${SOLVENT_NAME[S.solvent]}. ` + (S.solvent === 'alcohol' ? 'Lá bạc màu, cồn chuyển xanh lục.' : 'Lá vẫn còn màu xanh lục.'));
     if (S.drop >= 0.5){
-      L.push(`Đã nhỏ ${REAGENT_NAME[S.reagent]} lên lá.`);
+      L.push(`Đã nhúng lá vào ${REAGENT_NAME[S.reagent]}.`);
       L.push(`Phần lá không bịt: ${colorWord(S, 'open')}.`);
       if (S.strip) L.push(`Phần lá bịt giấy đen: ${colorWord(S, 'band')}.`);
     }

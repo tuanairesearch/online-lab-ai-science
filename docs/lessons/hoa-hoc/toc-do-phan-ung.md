@@ -1,152 +1,62 @@
 # Đặc tả thí nghiệm: Tốc độ phản ứng và chất xúc tác
 
-> BẢN NHÁP do Claude Code soạn, giáo viên duyệt trước khi dựng module.
-> Mọi chỗ ghi **CHƯA CHẮC** cần đối chiếu SGK KHTN 8 (Kết nối tri thức). Sửa thẳng vào file này.
-
-## Trạng thái dựng (bản demo, 2026-10-17)
-- Đã dựng `assets/js/lessons/toc-do-phan-ung.js`, chỉ phần **đá vôi + HCl**: bước 1–4 + kết luận (3 yếu tố), câu hỏi mồi 1–3, chế độ tự do (bình 2: dạng đá vôi, nồng độ 0,5–2 M, nhiệt độ 5–60 °C).
-- **Chưa dựng:** bước 5 chất xúc tác (H₂O₂ + MnO₂) và câu hỏi 4.
-- Khác bản nháp bên dưới: thời gian thí nghiệm trên mô phỏng là 600 s (tua nhanh); "ngâm nước đá" tính là 5 °C; câu hỏi 3 hỏi trước, sau đó mới chạy thí nghiệm nước ấm 50 °C theo SGK.
-- Mọi chỗ CHƯA CHẮC bên dưới vẫn còn nguyên, cần giáo viên duyệt trước khi dùng chính thức.
+> Đã dựng thành `assets/js/lessons/toc-do-phan-ung.js` (bản 2026-10-19).
+> Các bước đã đối chiếu với SGK KHTN 8 – Kết nối tri thức, Bài 7 (tr. 31–34), qua các trang lời giải SGK (xem "Nguồn đối chiếu").
+> Giáo viên vẫn cần mở SGK giấy so lại một lượt trước khi dùng chính thức. Chỗ nào ghi **CẦN GV XÁC NHẬN** là chỗ chưa có trong SGK hoặc chưa kiểm được.
 
 ## Thông tin chung
-- Môn (mạch): Hóa học
-- Lớp: 8
-- Chương – Bài – Trang SGK: Chương I Phản ứng hóa học – Bài 7 Tốc độ phản ứng và chất xúc tác – tr. __ (**CHƯA CHẮC** số bài và trang)
-- Tên thí nghiệm: Các yếu tố ảnh hưởng đến tốc độ phản ứng
-- Mục tiêu: học sinh thấy được tốc độ phản ứng tăng khi (1) tăng diện tích bề mặt chất rắn, (2) tăng nồng độ, (3) tăng nhiệt độ, (4) có chất xúc tác; chất xúc tác không bị mất đi sau phản ứng.
-- Vì sao cần mô phỏng: trường thiếu acid HCl, H₂O₂, MnO₂, ống nghiệm, đèn cồn. HCl ăn mòn, nguy hiểm khi học sinh tự làm. Chiếu tivi thì cả lớp đều thấy được bọt khí (làm thật chỉ vài em đứng gần mới thấy). Mô phỏng thêm xi lanh đo thể tích khí và đồ thị để **so sánh nhanh/chậm bằng số**, không chỉ "nhìn bọt".
+- Môn: Hóa học · Lớp 8 · Chương I Phản ứng hóa học · Bài 7 Tốc độ phản ứng và chất xúc tác (tr. 31–34)
+- Mục tiêu: học sinh thấy được tốc độ phản ứng tăng khi tăng nồng độ, tăng nhiệt độ, tăng diện tích bề mặt tiếp xúc, hoặc có chất xúc tác; chất xúc tác không bị biến đổi sau phản ứng.
+- Vì sao cần mô phỏng: trường thiếu dung dịch HCl, nước oxy già, MnO₂, ống nghiệm, cân; acid nguy hiểm khi học sinh tự làm; chiếu tivi thì cả lớp cùng thấy, còn làm thật chỉ vài em đứng gần mới thấy bọt khí.
 
-## Dụng cụ, hóa chất (**CHƯA CHẮC**: đối chiếu đúng danh sách SGK)
-- 2 bình tam giác (hoặc 2 ống nghiệm) đặt cạnh nhau để so sánh
-- Đá vôi (CaCO₃): dạng viên và dạng bột
-- Dung dịch HCl loãng (0,5 M; 1 M; 2 M)
-- Cốc nước ấm (khoảng 50 °C), cốc nước đá
-- Dung dịch H₂O₂ 3% (nước oxy già), bột MnO₂, que đóm
-- **Thêm so với SGK (để đo):** xi lanh thu khí có vạch mL gắn trên mỗi bình, đồng hồ bấm giờ, cân. Giáo viên quyết định giữ hay bỏ.
+## Bốn hoạt động theo SGK
+Mỗi hoạt động có hai ống nghiệm (hoạt động 2 là hai cốc) chỉ khác nhau một yếu tố, cho chất vào cùng lúc.
 
-## Các bước
-Mỗi bước so sánh **hai bình chạy cùng lúc**: bình trái giữ nguyên, bình phải đổi đúng một yếu tố.
+| # | Hoạt động SGK | Chuẩn bị (theo SGK) | Cách làm | Quan sát |
+|---|---|---|---|---|
+| 1 | Ảnh hưởng của nồng độ (tr. 32) | HCl 0,1 M và 1 M; 2 đinh sắt giống nhau (≈ 0,2 g) | ~5 mL HCl 0,1 M vào ống 1, ~5 mL HCl 1 M vào ống 2, thả nhẹ đinh sắt | Ống HCl 1 M có nhiều bọt khí hơn. Nồng độ tăng → tốc độ tăng |
+| 2 | Ảnh hưởng của nhiệt độ (tr. 32) | Viên C sủi, nước lạnh, nước nóng, 2 cốc | Cho đồng thời mỗi cốc một viên C sủi | Cốc nước nóng sủi mạnh, tan nhanh hơn. Nhiệt độ tăng → tốc độ tăng |
+| 3 | Ảnh hưởng của diện tích bề mặt tiếp xúc (tr. 33) | HCl 0,1 M; đá vôi viên và bột | ~1 g đá vôi bột vào ống 1, ~1 g đá vôi viên vào ống 2, thêm ~3 mL HCl 0,1 M mỗi ống | Đá vôi bột phản ứng nhanh hơn. Hạt càng nhỏ → tốc độ càng lớn |
+| 4 | Ảnh hưởng của chất xúc tác (tr. 33) | Nước oxy già y tế H₂O₂ 3%, bột MnO₂ | ~3 mL H₂O₂ vào 2 ống, thêm một ít MnO₂ vào ống 2 | Ống có MnO₂ thoát khí nhanh, mạnh |
 
-| # | Tên bước | Thực hiện | Quan sát được |
-|---|---|---|---|
-| 1 | Chuẩn bị, an toàn | Đeo kính, găng tay. Mỗi bình cho 50 mL dung dịch HCl 1 M. Chuẩn bị 2 phần đá vôi, mỗi phần 0,5 g. | Giới thiệu phản ứng: CaCO₃ + 2HCl → CaCl₂ + CO₂↑ + H₂O. Khí CO₂ thoát ra thành bọt. |
-| 2 | Diện tích bề mặt | Bình trái: 0,5 g đá vôi **viên**. Bình phải: 0,5 g đá vôi **bột**. Cho vào cùng lúc. | Bình bột sủi bọt mạnh hơn, hết chất rắn sớm hơn. Cuối cùng hai bình thu được cùng một lượng khí (khoảng 124 mL). |
-| 3 | Nồng độ | Cùng đá vôi viên. Bình trái HCl **0,5 M**, bình phải HCl **2 M**. | Bình 2 M sủi mạnh hơn, khí ra nhanh hơn. Lượng khí cuối cùng vẫn bằng nhau (acid đều dư). |
-| 4 | Nhiệt độ | Cùng đá vôi viên, HCl 1 M. Bình trái để ở nhiệt độ phòng (25 °C), bình phải ngâm trong cốc nước ấm (50 °C). | Bình nóng sủi mạnh hơn, khí ra nhanh hơn. |
-| 5 | Chất xúc tác | Hai ống mỗi ống 10 mL H₂O₂ 3%. Ống phải thêm một ít bột MnO₂. Đưa que đóm còn tàn đỏ vào miệng ống. | Ống không có MnO₂: gần như không thấy bọt. Ống có MnO₂: sủi bọt mạnh, que đóm bùng cháy (khí O₂). Lọc, cân lại: MnO₂ không bị hao hụt. |
-| 6 | Kết luận | Rút ra 4 yếu tố làm tăng tốc độ phản ứng. | Bảng tổng kết (cuối file). |
+Ghi chú khi dựng: ở hoạt động 3, SGK đặt **bột ở ống 1, viên ở ống 2**. Mô phỏng đảo lại (ống 1 viên, ống 2 bột) để cả 4 hoạt động đều theo một quy ước "ống 1 giữ nguyên, ống 2 thay đổi". **CẦN GV XÁC NHẬN** có giữ cách đảo này không.
 
-**CHƯA CHẮC:** SGK dùng đá vôi với HCl cho cả 3 yếu tố đầu, hay dùng chất khác (ví dụ kẽm với HCl) cho yếu tố nồng độ/nhiệt độ? SGK có bước cân lại MnO₂ không? Nếu khác, mình sửa theo SGK.
+## Các bước trên mô phỏng
+1. Chuẩn bị, an toàn (giới thiệu cách so sánh hai ống chỉ khác một yếu tố).
+2. Hoạt động 1 – Nồng độ (câu hỏi mồi 1).
+3. Hoạt động 2 – Nhiệt độ (câu hỏi mồi 2).
+4. Hoạt động 3 – Diện tích bề mặt tiếp xúc (câu hỏi mồi 3).
+5. Hoạt động 4 – Chất xúc tác (câu hỏi mồi 4).
+6. Kết luận: bảng 4 yếu tố.
 
-## Số liệu, công thức dùng trong mô phỏng
-- **Lượng khí tối đa** (theo phương trình, acid dư):
-  - 0,5 g CaCO₃ = 0,005 mol → 0,005 mol CO₂ → **≈ 124 mL** (thể tích mol khí 24,79 L/mol ở 25 °C, 1 bar, theo SGK KHTN 8).
-  - Kiểm tra acid dư: 50 mL HCl 0,5 M = 0,025 mol, cần 0,01 mol, vậy acid luôn dư.
-  - 10 mL H₂O₂ 3% (≈ 0,3 g H₂O₂ = 0,0088 mol), 2H₂O₂ → 2H₂O + O₂ → 0,0044 mol O₂ → **≈ 109 mL**.
-- **Thể tích khí theo thời gian:** V(t) = V_max · (1 − e^(−r·t)).
-- **Tốc độ r** = r₀ × (nồng độ / 1 M) × hệ số bề mặt × 2^((T − 25)/10).
-  - Hệ số bề mặt: viên 1, mảnh nhỏ 3, bột 10.
-  - Nhiệt độ: tăng 10 °C thì tốc độ tăng khoảng 2 lần (SGK có nêu quy tắc này không? **CHƯA CHẮC**; nếu không thì chỉ hiện "nhanh hơn", không hiện số lần).
-  - H₂O₂: không xúc tác r rất nhỏ (gần như không thấy khí trong thời gian thí nghiệm); có MnO₂ r lớn.
-- **Đơn giản hóa (sẽ ghi rõ cho giáo viên):** r₀ và các hệ số là số **minh họa**, chọn để thấy rõ nhanh/chậm, không phải số đo thật. Xu hướng (tăng/giảm) đúng kiến thức; tỉ lệ chính xác thì không. Thời gian trên màn hình được tua nhanh, có ghi "Tua nhanh".
+## Phần THÊM so với SGK (để so sánh bằng số)
+- Mỗi ống nghiệm nối với một xi lanh đo thể tích khí, cạnh đó là đồ thị theo thời gian. Hoạt động 2 (cốc hở) đo "phần viên sủi đã tan (%)" thay cho thể tích khí.
+- **Lượng khí tối đa** tính theo phương trình hóa học, chất nào hết trước quyết định; thể tích mol khí 24,79 L/mol (25 °C, 1 bar):
+  - HĐ1: Fe + 2HCl → FeCl₂ + H₂. 5 mL HCl 0,1 M = 0,0005 mol → tối đa 0,00025 mol H₂ ≈ 6,2 mL; HCl 1 M → đinh sắt hoặc acid hết trước, tối đa ≈ 62 mL. Trong thời gian mô phỏng, phản ứng chưa xong (sắt phản ứng chậm), nên không vẽ đường "tối đa".
+  - HĐ3: CaCO₃ + 2HCl → CaCl₂ + CO₂ + H₂O. 3 mL HCl 0,1 M = 0,0003 mol (acid hết trước, 1 g đá vôi = 0,01 mol còn dư) → tối đa 0,00015 mol CO₂ ≈ 3,7 mL ở **cả hai ống**.
+  - HĐ4: 2H₂O₂ → 2H₂O + O₂. 3 mL H₂O₂ 3% ≈ 0,09 g ≈ 0,0026 mol → tối đa ≈ 33 mL O₂.
+- **Tốc độ là số minh họa**: dξ/dt = k × [acid] × hệ số bề mặt (viên 1, mảnh 3, bột 10) × 2^((T − 25)/10), có MnO₂ thì k lớn hơn rất nhiều. Viên sủi tan đều theo thời gian, nhanh hơn khi nóng. Đúng xu hướng, không phải số đo thật; thời gian được tua nhanh và có ghi "tua nhanh".
+- Nhiệt độ "nước lạnh" ≈ 15 °C, "nước nóng" ≈ 70 °C, "nước đá" ≈ 5 °C, "nước ấm" ≈ 35 °C là số chọn để minh họa (SGK không ghi số).
 
-## Câu hỏi mồi (4 câu; mỗi đáp án là một thông số, chạy lại hai bình để thấy hậu quả)
+## Câu hỏi mồi (mỗi đáp án là một cách làm ống 2, chạy lại hai ống để thấy hậu quả)
+1. **Nồng độ** – Ống 1: đinh sắt + 5 mL HCl 0,1 M. Cho gì vào ống 2? A. HCl 0,1 M (bằng nhau) · B. Nước cất (không có bọt) · C. HCl 0,1 M pha thêm 5 mL nước (chậm hơn) · **D. HCl 1 M**.
+2. **Nhiệt độ** – Cốc 1 nước lạnh. Rót nước nào vào cốc 2 để viên sủi tan nhanh nhất? A. Nước lạnh (bằng nhau) · B. Nước đá (chậm hơn) · **C. Nước nóng** · D. Nước ấm (nhanh hơn cốc 1 nhưng chưa nhanh nhất).
+3. **Diện tích bề mặt** – 1 g đá vôi, 3 mL HCl 0,1 M. Dạng nào cho ống 2? A. Viên (bằng nhau) · B. Vài mảnh nhỏ (nhanh hơn một chút) · **C. Bột** · D. Viên rửa qua nước (bằng nhau).
+4. **Chất xúc tác** – 3 mL H₂O₂ 3%. Làm gì với ống 2? A. Thêm 3 mL nước cất · **B. Thêm một ít bột MnO₂** · C. Ngâm nước đá · D. Rót thêm 3 mL H₂O₂ 3%. Các đáp án sai đều gần như không có bọt khí.
+- Nhận xét khi sai, gợi ý lần 2, giải thích khi đúng: xem `questions` trong module.
+- **CẦN GV XÁC NHẬN**: câu trả lời soạn sẵn "thức ăn để ngoài trời nóng nhanh ôi thiu hơn để trong tủ lạnh" là ví dụ đời sống, không trích SGK.
 
-### Câu 1: Diện tích bề mặt
-- Hỏi ở đâu: đầu bước 2, trước khi cho đá vôi vào
-- Nhãn ngắn: Dạng đá vôi nào tan nhanh nhất?
-- Câu hỏi: "Cùng 0,5 g đá vôi, cùng loại acid. Em cho đá vôi dạng nào vào bình phải để khí thoát ra nhanh nhất?"
-- Đáp án:
-  - A. Một viên to → bình phải chạy như bình trái (bằng nhau)
-  - B. Vài mảnh nhỏ → nhanh hơn một chút
-  - **C. Bột mịn** (đúng) → sủi mạnh, xi lanh đầy nhanh nhất
-  - D. Một viên to nhưng đổ gấp đôi acid (100 mL, cùng 1 M) → **không nhanh hơn**, vì nồng độ không đổi
-- Nhận xét khi chọn sai:
-  - A: "Hai bình y hệt nhau thì khí ra bằng nhau. Em thử đổi hình dạng đá vôi xem."
-  - B: "Nhanh hơn viên to rồi! Còn cách nào để acid chạm vào đá vôi nhiều hơn nữa?"
-  - D: "Thêm acid mà nồng độ vẫn thế thì bọt không ra nhanh hơn. Acid chỉ phản ứng ở chỗ chạm vào mặt đá vôi."
-- Gợi ý khi sai lần 2: "Chia nhỏ đá vôi thì phần mặt ngoài chạm vào acid nhiều hơn hay ít hơn?"
-- Giải thích khi đúng: "Đá vôi càng nhỏ thì diện tích bề mặt tiếp xúc với acid càng lớn, phản ứng càng nhanh. Lượng khí cuối cùng vẫn bằng nhau vì cùng 0,5 g đá vôi."
-- Nguồn SGK: KHTN 8 Bài 7 (**CHƯA CHẮC** trang)
-- Nối bài cũ: Bài 2 Phản ứng hóa học (dấu hiệu có phản ứng: có chất khí thoát ra) — **CHƯA CHẮC** tên bài
-
-### Câu 2: Nồng độ
-- Hỏi ở đâu: đầu bước 3
-- Nhãn ngắn: Dùng acid nào để sủi nhanh hơn?
-- Câu hỏi: "Bình trái đang dùng HCl 0,5 M. Em chọn acid nào cho bình phải để khí thoát ra nhanh hơn?"
-- Đáp án:
-  - A. HCl 0,5 M (giống bình trái) → bằng nhau
-  - B. HCl 0,5 M pha thêm nước → chậm hơn bình trái
-  - C. Nước cất → không có phản ứng, không có bọt
-  - **D. HCl 2 M** (đúng) → nhanh hơn rõ rệt
-- Nhận xét khi chọn sai:
-  - A: "Cùng nồng độ nên hai bình sủi như nhau."
-  - B: "Pha thêm nước làm acid loãng hơn, bọt còn ra chậm hơn bình trái!"
-  - C: "Nước không phản ứng với đá vôi nên không có bọt khí nào."
-- Gợi ý khi sai lần 2: "Trong cùng một thể tích, acid đặc hơn có nhiều hay ít chất phản ứng hơn?"
-- Giải thích khi đúng: "Nồng độ acid càng lớn thì phản ứng càng nhanh. Lượng khí cuối cùng vẫn bằng nhau vì acid đều dư, lượng đá vôi như nhau."
-- Nguồn SGK: KHTN 8 Bài 7; nồng độ mol ở Bài 4 Dung dịch và nồng độ (**CHƯA CHẮC**)
-
-### Câu 3: Nhiệt độ
-- Hỏi ở đâu: đầu bước 4
-- Nhãn ngắn: Làm sao cho phản ứng CHẬM lại?
-- Câu hỏi: "Ngược lại, muốn bình phải phản ứng CHẬM hơn bình trái, em làm gì?"
-- Đáp án:
-  - A. Ngâm bình vào nước ấm 50 °C → nhanh hơn (ngược ý)
-  - **B. Ngâm bình vào nước đá** (đúng) → chậm hơn
-  - C. Nghiền đá vôi thành bột → nhanh hơn (ngược ý)
-  - D. Dùng HCl 2 M → nhanh hơn (ngược ý)
-- Nhận xét khi chọn sai:
-  - A: "Bình nóng sủi còn mạnh hơn! Nhiệt độ cao làm phản ứng nhanh lên."
-  - C: "Bột có diện tích bề mặt lớn, phản ứng nhanh hơn, ngược với điều cần."
-  - D: "Acid đặc hơn làm phản ứng nhanh hơn, ngược với điều cần."
-- Gợi ý khi sai lần 2: "Vì sao nhà em cất thức ăn trong tủ lạnh?"
-- Giải thích khi đúng: "Nhiệt độ thấp làm phản ứng chậm lại. Vì thế người ta bảo quản thực phẩm trong tủ lạnh để chúng lâu hỏng."
-- Nguồn SGK: KHTN 8 Bài 7 (**CHƯA CHẮC** SGK có ví dụ tủ lạnh không; nếu không, chỉ giữ câu đầu)
-
-### Câu 4: Chất xúc tác
-- Hỏi ở đâu: đầu bước 5
-- Nhãn ngắn: Thêm gì để H₂O₂ phân hủy nhanh?
-- Câu hỏi: "H₂O₂ để yên thì phân hủy rất chậm. Em thêm gì vào ống phải để có nhiều bọt khí O₂ ngay?"
-- Đáp án:
-  - A. Thêm nước → loãng hơn, vẫn gần như không có bọt
-  - **B. Thêm một ít bột MnO₂** (đúng) → sủi mạnh, que đóm bùng cháy
-  - C. Đặt ống vào nước đá → còn chậm hơn
-  - D. Đổ thêm H₂O₂ 3% → vẫn gần như không có bọt (cùng nồng độ)
-- Nhận xét khi chọn sai:
-  - A: "Thêm nước làm dung dịch loãng hơn, phản ứng chậm hơn nữa."
-  - C: "Lạnh thì phản ứng chậm đi, que đóm không bùng cháy."
-  - D: "Nồng độ không đổi nên vẫn rất chậm. Cần một chất giúp phản ứng nhanh hơn mà bản thân nó không mất đi."
-- Gợi ý khi sai lần 2: "Trong số dụng cụ trên bàn, có một chất bột màu đen chưa dùng tới."
-- Giải thích khi đúng: "MnO₂ là chất xúc tác: làm phản ứng nhanh hơn, sau phản ứng vẫn còn nguyên. Khí làm que đóm bùng cháy là O₂."
-- Nguồn SGK: KHTN 8 Bài 7 (**CHƯA CHẮC**)
-
-## Chế độ tự do (đề xuất)
-Học sinh tự chỉnh **bình phải**; bình trái giữ chuẩn (viên, HCl 1 M, 25 °C) để so sánh.
-
-| Thông số | Giá trị |
-|---|---|
-| Dạng đá vôi | Viên / Mảnh nhỏ / Bột |
-| Nồng độ HCl | 0,5–2 M (bước 0,25) |
-| Nhiệt độ | 5–60 °C (bước 5) |
-| Phản ứng | Đá vôi + HCl / H₂O₂ (có hoặc không MnO₂) |
-
-Dòng "Quan sát": bình nào nhanh hơn, sau bao lâu (thời gian mô phỏng) thì đạt một nửa lượng khí, thể tích khí cuối cùng.
-
-## Câu hỏi gợi ý cho ô chat
-| Bước | Câu hỏi gợi ý | Trả lời soạn sẵn |
-|---|---|---|
-| 1 | Bọt khí là khí gì? | Đó là khí carbon dioxide (CO₂), sinh ra khi đá vôi phản ứng với acid. |
-| 1 | Vì sao phải đeo kính, găng tay? | Acid HCl ăn mòn da và mắt. Khi làm thí nghiệm thật, phải đeo kính, găng tay, không ngửi hay nếm hóa chất. |
-| 2 | Vì sao hai bình cuối cùng có cùng lượng khí? | Vì hai bình có cùng 0,5 g đá vôi. Diện tích bề mặt chỉ làm phản ứng nhanh hay chậm, không làm thay đổi lượng khí tạo ra. |
-| 4 | Vì sao nóng thì phản ứng nhanh hơn? | Khi nóng, các hạt chuyển động nhanh hơn, va chạm với nhau nhiều và mạnh hơn, nên phản ứng nhanh hơn. (**CHƯA CHẮC** SGK lớp 8 có giải thích theo va chạm hạt không) |
-| 5 | Chất xúc tác có bị mất đi không? | Không. Chất xúc tác giúp phản ứng nhanh hơn nhưng sau phản ứng vẫn còn nguyên, có thể dùng lại. |
+## Chế độ tự do
+Chọn một trong 4 hoạt động; ống (cốc) 1 giữ như SGK, học sinh chỉnh ống 2: nồng độ HCl 0,1–2 M (HĐ1), dạng đá vôi (HĐ3), có/không MnO₂ (HĐ4), nhiệt độ 5–80 °C (mọi hoạt động).
 
 ## Kết luận của bài
 | Yếu tố | Thay đổi | Tốc độ phản ứng |
 |---|---|---|
-| Diện tích bề mặt | Chất rắn càng nhỏ (bột) | Tăng |
-| Nồng độ | Càng đặc | Tăng |
-| Nhiệt độ | Càng cao | Tăng |
-| Chất xúc tác | Có chất xúc tác (MnO₂) | Tăng; chất xúc tác không mất đi sau phản ứng |
+| Nồng độ | Nồng độ chất tham gia tăng | Tăng |
+| Nhiệt độ | Nhiệt độ tăng | Tăng |
+| Diện tích bề mặt tiếp xúc | Chất rắn càng nhỏ | Tăng |
+| Chất xúc tác | Có chất xúc tác | Tăng; chất xúc tác không bị biến đổi sau phản ứng |
+
+## Nguồn đối chiếu
+- VnDoc, lời giải KHTN 8 KNTT Bài 7 (tr. 31–34): https://vndoc.com/khoa-hoc-tu-nhien-8-ket-noi-tri-thuc-bai-7-296703
+- Giáo án Bài 7 (phiếu học tập 4 thí nghiệm, cùng số liệu): https://minio.ftech.ai/fs-landing/KHTN_8_Ket_noi_Bai_7_7f9a55f99b.pdf

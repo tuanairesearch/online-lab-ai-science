@@ -87,7 +87,7 @@ function template(L){
   return `
 <div class="wrap">
   <header class="page">
-    <a class="home-link" href="/">← Tất cả thí nghiệm</a>
+    <a class="home-link" href="${L.subject ? '/' + esc(L.subject) : '/'}">← ${L.subjectName ? esc(L.subjectName) : 'Tất cả thí nghiệm'}</a>
     <span class="eyebrow">${esc(L.grade)} · ${esc(L.chapter)} · ${esc(L.lesson)}</span>
     <h1>${esc(L.title)}</h1>
     <p class="lead">${esc(L.intro)}</p>

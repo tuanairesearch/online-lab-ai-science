@@ -12,18 +12,19 @@ Mô phỏng thí nghiệm Khoa học tự nhiên THCS theo từng bước SGK (b
 ```
 index.html                   Trang chủ: 3 thẻ môn Vật lí / Hóa học / Sinh học
 subject.html                 Trang một môn (/vat-li, /hoa-hoc, /sinh-hoc): bài theo tab Lớp 6–9
-thau-kinh/index.html         Trang thí nghiệm Thấu kính (KHTN 9 – Bài 8)
+lab.html                     Trang thí nghiệm dùng chung (/vat-li/thau-kinh…): nạp bài theo URL
 assets/css/lab.css           Giao diện dùng chung (biến màu, có màu riêng từng môn)
 assets/js/catalog.js         Danh mục môn (SUBJECTS) và bài thí nghiệm (LESSONS)
 assets/js/art.js             Hình minh họa SVG của 3 môn
 assets/js/pages/home.js      Dựng trang chủ từ catalog
 assets/js/pages/subject.js   Dựng trang môn từ catalog
+assets/js/pages/lab.js       Đọc URL /<môn>/<bài> → tìm bài trong catalog → nạp module bài
 assets/js/engine.js          Lõi: chạy bước, câu hỏi mồi, trợ lý AI, số liệu, công cụ vẽ
 assets/js/lessons/thau-kinh.js   Nội dung + hình vẽ của thí nghiệm Thấu kính (dùng làm mẫu)
 api/ask.js                   Hàm máy chủ gọi Gemini (Vercel Serverless Function)
 sw.js                        Gỡ bản offline cũ khỏi máy đã từng cài (không còn chạy offline)
 manifest.webmanifest         Cài như ứng dụng
-vercel.json, serve.json      Đường dẫn đẹp /vat-li… (trên Vercel / khi chạy npx serve)
+vercel.json, serve.json      Đường dẫn đẹp /vat-li, /vat-li/thau-kinh… và chuyển link cũ /thau-kinh/ sang link mới
 ```
 
 ## Đưa lên mạng (Vercel)
@@ -74,8 +75,8 @@ Chỉ xem phần mô phỏng (không có AI) thì chạy web tĩnh bất kỳ, v
    - `view` (vùng nhìn, đơn vị cm), `base()` (biến của cảnh), `draw()` (vẽ cảnh)
    - `steps`: mỗi bước có `title`, `sgk` (chép theo SGK), `note` (điều quan sát được), `chips` (câu hỏi gợi ý kèm câu trả lời soạn sẵn), `setup()` và `run()`. Bước có câu hỏi mồi thì thêm `q: true` và gọi `await h.ask('id-câu-hỏi')` trong `run()`.
    - `questions`: mỗi câu có 4 lựa chọn, `answer`, `sim()` (chạy thí nghiệm theo lựa chọn), `reset()`, `wrong[]` (nhận xét cho từng đáp án sai), `hint2`, `right`, `ref`.
-2. Tạo thư mục trang, ví dụ `do-toc-do/index.html` (sao chép `thau-kinh/index.html`, đổi dòng `import lesson from ...`).
-3. Thêm bài vào `LESSONS` trong `assets/js/catalog.js` (đúng `subject`, `grade`, `status: 'ready'`). Thẻ môn ở trang chủ tự cập nhật số thí nghiệm.
+2. File module nằm trong `assets/js/lessons/` (ví dụ `assets/js/lessons/do-toc-do.js`).
+3. Thêm bài vào `LESSONS` trong `assets/js/catalog.js` (đúng `subject`, `grade`, `status: 'ready'`, `href: '/<môn>/<bài>'`, `module`). Không cần tạo trang HTML: `lab.html` tự nạp bài theo URL. Thẻ môn ở trang chủ tự cập nhật số thí nghiệm.
 
 Mẹo: thiết kế để **mỗi đáp án là một thông số của thí nghiệm** (một vị trí, một loại dụng cụ…). Khi đó `sim()` chỉ cần chạy lại cùng một mô phỏng với thông số đó.
 
