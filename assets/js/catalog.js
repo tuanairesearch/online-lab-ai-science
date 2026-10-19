@@ -18,5 +18,21 @@ export const LESSONS = [
     status: 'ready', ai: true,
     href: '/thau-kinh/',
     module: '/assets/js/lessons/thau-kinh.js'
+  },
+  {
+    id: 'toc-do-phan-ung', subject: 'hoa-hoc', grade: 8, lesson: 'Bài 7',
+    title: 'Tốc độ phản ứng: đá vôi và acid',
+    desc: 'Hai bình đá vôi với acid chạy cùng lúc: diện tích bề mặt, nồng độ, nhiệt độ. 5 bước, 3 câu hỏi mồi.',
+    status: 'ready', ai: true,
+    href: '/toc-do-phan-ung/',
+    module: '/assets/js/lessons/toc-do-phan-ung.js'
+  },
+  {
+    id: 'quang-hop', subject: 'sinh-hoc', grade: 7, lesson: 'Bài 24',
+    title: 'Chứng minh quang hợp tạo ra tinh bột',
+    desc: 'Bịt lá khoai lang bằng giấy đen, chiếu sáng, tẩy diệp lục rồi thử iodine. 5 bước, 4 câu hỏi mồi.',
+    status: 'ready', ai: true,
+    href: '/quang-hop/',
+    module: '/assets/js/lessons/quang-hop.js'
   }
 ];

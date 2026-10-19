@@ -2,7 +2,7 @@
 
 import { esc } from '../engine.js';
 import { SUBJECTS, LESSONS } from '../catalog.js';
-import { SUBJECT_ART } from '../art.js';
+import { SUBJECT_ART, animateOnHover } from '../art.js';
 
 const MAX_FEATURED = 3;
 
@@ -28,17 +28,5 @@ function subjectCard(s){
 
 document.getElementById('subjects').innerHTML = SUBJECTS.map(subjectCard).join('');
 
-/* hình minh họa chuyển động (lớp .live) khi rê chuột hoặc chọn thẻ bằng phím;
-   máy cảm ứng không rê chuột được nên chạy khi thẻ hiện rõ trên màn hình */
-const cards = [...document.querySelectorAll('.subj')];
-cards.forEach(c => {
-  const set = on => c.classList.toggle('live', on);
-  c.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') set(true); });
-  c.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') set(false); });
-  c.addEventListener('focusin', () => set(true));
-  c.addEventListener('focusout', () => set(false));
-});
-if (!matchMedia('(hover: hover)').matches && 'IntersectionObserver' in window){
-  const io = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('live', e.intersectionRatio >= 0.6)), { threshold: [0, 0.6] });
-  cards.forEach(c => io.observe(c));
-}
+// hình minh họa chuyển động khi rê chuột / chọn bằng phím / thẻ hiện trên màn hình cảm ứng
+animateOnHover([...document.querySelectorAll('.subj')]);

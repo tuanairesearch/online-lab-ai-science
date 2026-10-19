@@ -7,6 +7,10 @@
   --stage:#0A101C; --stage-2:#121A2A; --stage-line:#26324A; --stage-ink:#E9EFF8; --stage-muted:#8C9BB4;
   --beam:#FFD25A; --glass:#7CD3FF; --obj:#FF9A3C; --img:#59E0A0; --screen:#D3DCEA;
   --spec-1:#FF5A5A; --spec-2:#FFA53C; --spec-3:#FFE45C; --spec-4:#4FD88A; --spec-5:#5A8CFF; --spec-6:#B07CFF;
+  /* sân khấu hóa học: dung dịch, chất rắn, bọt khí, bể nước ấm/đá */
+  --liquid:#4FA3E0; --solid:#E6DDCB; --gas:#EAF6FF; --warm:#FF7A4D; --cold:#8FE3FF;
+  /* sân khấu sinh học: lá, lá đã tẩy diệp lục, tinh bột gặp iodine, dung dịch iodine, giấy đen, chậu đất */
+  --leaf:#4CB860; --leaf-pale:#E9E2C0; --starch:#5B46C9; --iodine:#C8892E; --paper:#050608; --pot:#B8673E; --soil:#6B4A33;
   --bubble-bg:#FFFFFF; --bubble-ink:#141B24; --bubble-muted:#5A6676; --bubble-line:#E1E6EE; --bubble-user:#EEF1F5;
   --b-ok:#1C7F47; --b-ok-soft:#E3F4EA; --b-bad:#B5412F; --b-bad-soft:#FCE9E5; --b-accent:#3A63E0; --b-accent-soft:#E9EEFD;
   --orb-a:#8A6CFF; --orb-b:#36B9FF; --orb-glow:rgba(124,140,255,.55); --on-accent:#FFFFFF; --on-beam:#1C1500;
@@ -143,7 +147,14 @@ header.page{display:grid;gap:8px}
 .mode-seg button:focus-visible{outline:2px solid var(--glass);outline-offset:-3px}
 .lab.free .bench{touch-action:none}
 
-.lab:fullscreen{border-radius:0;height:100%}
+/* toàn màn hình + chế độ tự do: nút mở bảng điều chỉnh nổi trên sân khấu */
+.fs-panel-btn{position:absolute;top:10px;right:14px;z-index:3;display:inline-flex;align-items:center;gap:7px;font:inherit;font-weight:600;font-size:14.5px;padding:8px 13px;border-radius:9px;border:1px solid var(--stage-line);background:var(--stage-2);color:var(--stage-ink);cursor:pointer}
+.fs-panel-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.fs-panel-btn[aria-expanded="true"]{background:var(--glass);border-color:var(--glass);color:var(--stage)}
+.fs-panel-btn:focus-visible{outline:2px solid var(--glass);outline-offset:2px}
+.side-box.float{position:absolute;top:58px;right:14px;z-index:5;width:min(340px,calc(100% - 28px));max-height:calc(100% - 142px);overflow:auto;   /* chừa chỗ cho nút trợ lý AI */
+  padding:14px;border-radius:14px;background:var(--surface);color:var(--ink);box-shadow:0 18px 50px #0009}
+.lab:fullscreen{border-radius:0;height:100%;position:relative}
 .lab:fullscreen .stage{flex:1;min-height:0}
 .lab:fullscreen .bench{height:100%;aspect-ratio:auto}
 
@@ -164,22 +175,55 @@ header.page{display:grid;gap:8px}
 .note{font-size:12.5px;color:var(--muted)}
 .side-box{display:grid;gap:10px;align-content:start}
 
-/* ---------- bảng điều chỉnh (chế độ tự do) ---------- */
-.fc{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
-.fc-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-weight:600;font-size:14.5px}
-.fc-head output{font-family:var(--f-mono);font-size:14px;color:var(--accent);white-space:nowrap}
-.fc input[type="range"]{width:100%;height:28px;margin:0;accent-color:var(--accent);cursor:pointer}
-.fc-seg{display:flex;flex-wrap:wrap;gap:6px}
-.fc-seg button{flex:1 1 auto;font:inherit;font-size:14px;font-weight:600;padding:8px 10px;border-radius:9px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
-.fc-seg button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
-.fc-seg button:focus-visible,.fc input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.fc-tog{display:flex;align-items:center;gap:10px;font-size:14.5px;font-weight:600;cursor:pointer}
-.fc-tog input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex:none}
-.fc-group{font-family:var(--f-mono);font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;padding-top:10px;border-top:1px solid var(--line)}
-.fc-group+.fc{border-top:0;padding-top:4px}
-.fc-group~.fc{padding-block:4px;border-top:0}
-.free-msg{font-size:14px;color:var(--ink);border-left:3px solid var(--accent);padding-left:10px}
+/* ---------- bảng điều chỉnh (chế độ tự do): thẻ gập/mở ---------- */
+.fp-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fp-all{border:0;background:transparent;color:var(--accent);font:600 13.5px var(--f-body);cursor:pointer;padding:4px 6px;border-radius:6px}
+.fp-all:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.fp-groups{display:grid;gap:8px}
+.fgroup{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden;transition:border-color .15s}
+.fgroup[open]{border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+.fg-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 9px;cursor:pointer;list-style:none;user-select:none}
+.fg-head::-webkit-details-marker{display:none}
+.fg-head:hover{background:var(--bg)}
+.fg-head:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:12px}
+.fg-icon{flex:none;width:32px;height:32px;border-radius:8px;background:var(--stage);display:grid;place-items:center}
+.fg-icon svg{width:22px;height:22px}
+.fg-text{flex:1;min-width:0;display:grid}
+.fg-title{font-weight:700;font-size:15px;line-height:1.3}
+.fg-sum{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);line-height:1.35}
+.fgroup[open] .fg-sum{display:none}   /* thẻ đang mở thì các nút đã hiện đủ thông số */
+.fg-chev{flex:none;width:16px;height:16px;fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s}
+.fgroup[open] .fg-chev{transform:rotate(180deg)}
+.fg-body{display:grid;gap:14px;padding:12px 12px 14px;border-top:1px solid var(--line)}
+/* mở/gập có chuyển động trên trình duyệt hỗ trợ; nơi khác thì mở/gập ngay */
+@supports (interpolate-size: allow-keywords){
+  .fp-groups{interpolate-size:allow-keywords}
+  .fgroup::details-content{height:0;overflow:clip;transition:height .25s ease,content-visibility .25s allow-discrete}
+  .fgroup[open]::details-content{height:auto}
+}
+.fc{display:grid;gap:6px}
+.fc-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.fc-val{font-family:var(--f-mono);font-size:13px;font-weight:700;color:var(--accent);background:var(--accent-soft);padding:1px 8px;border-radius:6px;white-space:nowrap}
+.fc input[type="range"]{width:100%;height:24px;margin:0;accent-color:var(--accent);cursor:pointer}
+.fc input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.fc-seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;padding:3px;border-radius:10px;background:var(--bg);border:1px solid var(--line)}
+.fc-seg button{font:inherit;font-size:13.5px;font-weight:600;padding:7px 4px;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+.fc-seg button:hover{color:var(--ink)}
+.fc-seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);font-weight:700;box-shadow:0 1px 3px #0002,0 0 0 1px var(--line)}
+.fc-seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.fc-tog{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;cursor:pointer}
+.fc-tog input{appearance:none;flex:none;position:relative;width:40px;height:22px;margin:0;border-radius:11px;background:var(--line);cursor:pointer;transition:background .2s}
+.fc-tog input::before{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px #0003;transition:transform .2s}
+.fc-tog input:checked{background:var(--accent)}
+.fc-tog input:checked::before{transform:translateX(18px)}
+.fc-tog input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.fc-act{justify-self:stretch;text-align:center}
+.free-msg{font-size:13.5px;color:var(--ink);background:var(--accent-soft);border-radius:8px;padding:8px 10px}
 .free-msg:empty{display:none}
+@media (prefers-reduced-motion: reduce){
+  .fgroup::details-content{transition:none}
+  .fg-chev,.fc-tog input,.fc-tog input::before{transition:none}
+}
 
 /* ---------- bảng giáo viên ---------- */
 .teacher{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px}
@@ -236,17 +280,85 @@ kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border
 .m-lamp{fill:var(--stage-2);transition:fill .3s}
 .live .m-lamp{fill:var(--beam)}
 .m-beam{opacity:0;transition:opacity .3s}
-.live .m-beam{opacity:.35}
+.live .m-beam{opacity:.35;animation:mbeam 1.2s ease-in-out .3s infinite alternate}
+@keyframes mbeam{to{opacity:.6}}
 .m-knob{transform-box:view-box;transform-origin:64px 66px;transition:transform .6s ease}
-.live .m-knob{transform:rotate(180deg)}
+.live .m-knob{transform:rotate(180deg);animation:knob 1.6s ease-in-out .6s infinite alternate}
+@keyframes knob{from{transform:rotate(180deg)}to{transform:rotate(240deg)}}
 .m-tube{transition:transform .6s ease}
-.live .m-tube{transform:translateY(2px)}
+.live .m-tube{transform:translateY(2px);animation:tube 1.6s ease-in-out .6s infinite alternate}
+@keyframes tube{from{transform:translateY(2px)}to{transform:translateY(3.5px)}}
 .v-light{opacity:0;transition:opacity .4s}
 .live .v-light{opacity:.16;transition-delay:.2s}
 .v-cells{opacity:.12;transform-box:view-box;transform-origin:142px 50px;transform:scale(1.25);transition:opacity .5s,transform .6s ease}
 .live .v-cells{opacity:1;transform:scale(1);transition-delay:.25s}
 .nuc{fill:var(--img);stroke:none;transform-box:fill-box;transform-origin:center;transform:scale(0);transition:transform .3s}
-.live .nuc{transform:scale(1);transition-delay:calc(.6s + var(--d,0s))}
+.live .nuc{transform:scale(1);transition:transform .45s cubic-bezier(.34,2,.5,1) calc(.6s + var(--d,0s));animation:nuc 1s ease-in-out infinite alternate;animation-delay:calc(1.2s + var(--d,0s) * 3)}
+@keyframes nuc{from{transform:scale(1)}to{transform:scale(1.45)}}
+.live .v-drift{animation:drift 3s ease-in-out 1s infinite alternate}
+@keyframes drift{from{transform:translate(0,0)}50%{transform:translate(-3px,1.5px)}to{transform:translate(3px,-1px)}}
+/* hình minh họa thí nghiệm (thẻ bài): thấu kính – tia sáng chạy ra, gặp nhau tại F' */
+.tk-lamp{opacity:.2;transition:opacity .3s}
+.live .tk-lamp{opacity:1}
+.ray-draw{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .9s ease-in-out}
+.live .ray-draw{stroke-dashoffset:0;transition-delay:calc(.15s + var(--d,0s))}
+.ray-flow{opacity:0;stroke-dasharray:.012 .088;stroke-width:3.4;stroke:var(--stage-ink);transition:opacity .3s}
+.live .ray-flow{opacity:.9;transition-delay:1.2s;animation:rayflow 1.4s linear infinite}
+@keyframes rayflow{to{stroke-dashoffset:-.1}}
+.tk-focus{transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:.8;transition:transform .3s}
+.live .tk-focus{transform:scale(1);transition-delay:1s;animation:focus 1.2s ease-in-out 1.3s infinite alternate}
+@keyframes focus{to{transform:scale(1.8);opacity:.35}}
+/* tốc độ phản ứng – bình bột sủi nhanh, xi lanh đẩy xa, đường đồ thị lên nhanh */
+.tr-bub{transform-box:fill-box;transform-origin:center;opacity:0}
+.live .tr-bub{animation:trbub var(--t,1s) ease-in infinite;animation-delay:var(--d,0s)}
+@keyframes trbub{0%{transform:translateY(0);opacity:0}15%{opacity:1}100%{transform:translateY(-15px);opacity:0}}
+.tr-plunger{transition:transform .4s ease-out}
+.live .tr-plunger{transform:translateX(var(--x));transition:transform var(--t) ease-out .2s}
+.tr-rock{transform-box:fill-box;transform-origin:50% 100%;transition:transform .4s}
+.live .tr-rock{transform:scale(.7);transition:transform 2.6s ease-out .2s}
+.tr-powder{transition:opacity .4s}
+.live .tr-powder{opacity:.15;transition:opacity 1s ease-out .2s}
+.tr-curve{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .4s}
+.live .tr-curve{stroke-dashoffset:0;transition:stroke-dashoffset var(--t) ease-out .2s}
+/* quang hợp – nắng chiếu lá bịt giấy đen; lá đã tẩy màu nhạt, nhỏ iodine thì màu loang từ giọt ra.
+   Hình đứng yên (và khi giảm chuyển động) hiện sẵn kết quả: mặt nạ đã loang hết, ống nhỏ giọt ẩn. */
+.qh-sun{fill:var(--stage-muted);transition:fill .3s}
+.live .qh-sun{fill:var(--beam)}
+.qh-spin{opacity:0;transform-box:view-box;transform-origin:14px 12px;transition:opacity .3s}
+.live .qh-spin{opacity:1;animation:qhspin 4s linear infinite}
+@keyframes qhspin{to{transform:rotate(360deg)}}
+.qh-sun-g{transform-box:view-box;transform-origin:14px 12px}
+.live .qh-sun-g{animation:qhpopin .5s cubic-bezier(.34,1.8,.5,1) both,qhglow 1.2s ease-in-out .5s infinite alternate}
+@keyframes qhpopin{from{transform:scale(.4)}to{transform:scale(1)}}
+@keyframes qhglow{to{transform:scale(1.15)}}
+.qh-rays{opacity:0;transition:opacity .3s}
+.live .qh-rays{opacity:.9;transition-delay:.2s;animation:qhray .5s linear infinite}
+@keyframes qhray{to{stroke-dashoffset:-6}}
+.qh-plant{transform-box:view-box;transform-origin:54px 76px}
+.live .qh-plant{animation:qhsway 1.4s ease-in-out infinite alternate}
+@keyframes qhsway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.qh-arrow{stroke:var(--stage-muted);transition:stroke .3s}
+.live .qh-arrow{stroke:var(--stage-ink);transition-delay:.9s}
+.qh-dropper,.qh-drop,.qh-ripple{opacity:0}
+.qh-dropper{transform-box:view-box;transform-origin:140px 0}
+.live .qh-dropper{animation:qhdropper 2.2s ease .9s both}
+@keyframes qhdropper{0%{opacity:0;transform:scale(0)}15%{opacity:1;transform:scale(1.3)}25%,75%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(0)}}
+.qh-drop{transform-box:fill-box;transform-origin:50% 100%}
+.live .qh-drop{animation:qhdrop .6s ease-in 1.3s both}
+@keyframes qhdrop{0%{opacity:0;transform:translateY(0)}10%,85%{opacity:1;transform:translateY(27px)}100%{opacity:0;transform:translateY(32px) scale(1.8,.4)}}
+.qh-ripple{transform-box:fill-box;transform-origin:center}
+.live .qh-ripple{animation:qhripple .9s ease-out 1.85s both}
+@keyframes qhripple{0%{opacity:0;transform:scale(.2)}10%{opacity:1}100%{opacity:0;transform:scale(3)}}
+.qh-spread{transform-box:fill-box;transform-origin:center}
+.live .qh-spread{animation:qhspread 1.3s ease-out 1.85s both}
+@keyframes qhspread{from{transform:scale(0)}to{transform:scale(1)}}
+.qh-result{transform-box:view-box;transform-origin:140px 52px}
+.live .qh-result{animation:qhpop .6s cubic-bezier(.34,1.8,.5,1) 3.1s both,qhbreathe 1.6s ease-in-out 3.7s infinite alternate}
+@keyframes qhpop{0%{transform:scale(1)}40%{transform:scale(.88)}100%{transform:scale(1)}}
+@keyframes qhbreathe{to{transform:scale(1.04)}}
+.qh-spark path{opacity:0;transform-box:fill-box;transform-origin:center}
+.live .qh-spark path{animation:qhspark 1.2s ease-in-out infinite;animation-delay:calc(3.3s + var(--d,0s))}
+@keyframes qhspark{0%,100%{opacity:0;transform:scale(0) rotate(0)}50%{opacity:1;transform:scale(1) rotate(90deg)}}
 .subj-body{display:grid;gap:12px;padding:20px 22px 22px;align-content:start}
 .subj h2{font-size:clamp(26px,2.6vw,34px);font-weight:700;color:var(--c)}
 .subj-link{color:inherit;text-decoration:none}
@@ -295,6 +407,7 @@ a.lcard:focus-visible{outline:3px solid var(--c);outline-offset:2px}
 .lcard h3{font-size:19px;font-weight:600;line-height:1.35}
 .lcard p{color:var(--muted);font-size:14.5px}
 .lcard.planned{opacity:.55;border-left-color:var(--line);cursor:default}
+.lcard-art{margin:-18px -20px 4px;border-radius:0 13px 0 0;overflow:hidden}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
 .tag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--line)}
 .tag.ai i{width:12px;height:12px;border-radius:50%;background:linear-gradient(140deg,var(--orb-a),var(--orb-b))}

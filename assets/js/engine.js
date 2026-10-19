@@ -24,14 +24,17 @@ function makeGraphics(canvas, view){
   };
   g.readColors = () => {
     const cs = getComputedStyle(document.documentElement);
-    ['stage','stage-2','stage-line','stage-ink','stage-muted','beam','glass','obj','img','screen','spec-1','spec-2','spec-3','spec-4','spec-5','spec-6']
+    ['stage','stage-2','stage-line','stage-ink','stage-muted','beam','glass','obj','img','screen','spec-1','spec-2','spec-3','spec-4','spec-5','spec-6','liquid','solid','gas','warm','cold','leaf','leaf-pale','starch','iodine','paper','pot','soil']
       .forEach(k => g.C[k] = cs.getPropertyValue('--' + k).trim());
   };
   g.fs = () => Math.max(11, Math.min(16, g.sc * 0.95));
   g.font = (px, w = 500, mono = false) => `${w} ${px}px ${mono ? '"JetBrains Mono", ui-monospace, monospace' : '"Be Vietnam Pro", system-ui, sans-serif'}`;
   g.rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
-  g.text = (t, x, y, { color = g.C['stage-ink'], size = g.fs(), weight = 500, align = 'center', base = 'middle', mono = false } = {}) => {
-    ctx.fillStyle = color; ctx.font = g.font(size, weight, mono); ctx.textAlign = align; ctx.textBaseline = base; ctx.fillText(t, x, y);
+  // chữ trên sân khấu có viền màu nền để vẫn đọc được khi tia sáng chạy ngang qua
+  g.text = (t, x, y, { color = g.C['stage-ink'], size = g.fs(), weight = 500, align = 'center', base = 'middle', mono = false, halo = true } = {}) => {
+    ctx.font = g.font(size, weight, mono); ctx.textAlign = align; ctx.textBaseline = base;
+    if (halo){ ctx.save(); ctx.shadowBlur = 0; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = g.C.stage; ctx.strokeText(t, x, y); ctx.restore(); }
+    ctx.fillStyle = color; ctx.fillText(t, x, y);
   };
   // Vẽ một đường gấp khúc (đơn vị cm) từ tỉ lệ from tới tỉ lệ p (0..1), có mũi tên chỉ chiều truyền.
   // Tăng p: tia chạy ra; tăng from: đuôi tia chạy theo, ánh sáng "chạy đi" hết.
@@ -96,6 +99,7 @@ function template(L){
         <canvas class="bench" data-el="bench" role="img" aria-label="${esc(L.canvasLabel || 'Mô phỏng thí nghiệm')}"></canvas>
         <div class="readout" data-el="readout" aria-live="polite"></div>
         <div class="orb-note" data-el="orbNote"></div>
+        ${L.free ? '<button class="fs-panel-btn" data-el="fsPanelBtn" type="button" hidden aria-expanded="false"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h7M13 4h1M2 12h1M7 12h7"/><circle cx="11" cy="4" r="2"/><circle cx="5" cy="12" r="2"/></svg>Bảng điều chỉnh</button>' : ''}
         <div class="bubble" data-el="bubble" hidden role="dialog" aria-label="Trợ lý AI">
           <div class="panel" data-el="bPanel" tabindex="-1"></div>
           <div class="panel" data-el="chatPanel" hidden>
@@ -131,9 +135,9 @@ function template(L){
         <ol data-el="stepList"></ol>
       </div>
       ${L.free ? `<div class="side-box" data-el="freeBox" hidden>
-        <h2>Bảng điều chỉnh</h2>
+        <div class="fp-head"><h2>Bảng điều chỉnh</h2><button class="fp-all" type="button" data-el="freeAll">Thu gọn hết</button></div>
         <p class="note">${esc(L.free.hint || 'Kéo các dụng cụ ngay trên giá, hoặc chỉnh ở bảng này.')}</p>
-        <div data-el="freeCtl"></div>
+        <div class="fp-groups" data-el="freeCtl"></div>
         <div class="row-btns" data-el="freeActs"></div>
         <p class="free-msg" data-el="freeMsg" aria-live="polite"></p>
       </div>` : ''}
@@ -429,7 +433,7 @@ export function mountLab(root, L){
       else if (lab.requestFullscreen) lab.requestFullscreen().catch(() => {});
     } catch {}
   });
-  document.addEventListener('fullscreenchange', () => setTimeout(g.resize, 60));
+  document.addEventListener('fullscreenchange', () => { setTimeout(g.resize, 60); placePanel(); });
   document.addEventListener('keydown', e => {
     const tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -439,7 +443,7 @@ export function mountLab(root, L){
       if (opt >= 0 && bPanel.querySelector('.opt')){ e.preventDefault(); resolvePending(opt); return; }
       if (e.key === 'Enter' && bPanel.querySelector('[data-act="go"]')){ e.preventDefault(); resolvePending('go'); return; }
     }
-    if (freeOn) return;
+    if (freeOn){ freeKey(e); return; }
     if (e.key === 'ArrowRight' || e.key === 'PageDown'){ e.preventDefault(); el('btnNext').click(); }
     else if (e.key === 'ArrowLeft' || e.key === 'PageUp'){ e.preventDefault(); el('btnPrev').click(); }
   });
@@ -459,6 +463,7 @@ export function mountLab(root, L){
   }
   function paramText(p){
     const v = P[p.key];
+    if (v == null) return 'chưa chọn';
     if (p.type === 'range') return fmt(v) + (p.unit ? ' ' + p.unit : '');
     if (p.type === 'choice') return (p.options.find(o => o.value === v) || {}).label || String(v);
     return v ? 'bật' : 'tắt';
@@ -469,15 +474,20 @@ export function mountLab(root, L){
     el('capText').innerHTML = '<span class="k">Quan sát:</span> ' + esc(FR.observe(S, P));
   }
   function syncFree(){
-    el('freeCtl').querySelectorAll('[data-key]').forEach(row => {
+    el('freeCtl').querySelectorAll('.fc').forEach(row => {
       const p = paramOf(row.dataset.key);
       row.hidden = !visible(p);
-      if (row.classList.contains('fc-group')) return;
       if (p.type === 'range'){
         const i = row.querySelector('input'); if (Number(i.value) !== P[p.key]) i.value = P[p.key];
         row.querySelector('output').textContent = paramText(p);
       } else if (p.type === 'choice') row.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === P[p.key])));
       else row.querySelector('input').checked = !!P[p.key];
+    });
+    // thẻ nhóm: dòng tóm tắt; ẩn cả thẻ khi không còn thông số nào dùng được
+    el('freeCtl').querySelectorAll('.fgroup').forEach(d => {
+      const gr = FR.groups.find(x => x.id === d.dataset.group);
+      d.hidden = !FR.params.some(p => p.group === gr.id && visible(p));
+      d.querySelector('.fg-sum').textContent = gr.summary ? gr.summary(P) : '';
     });
   }
   // Đổi cảnh tới trạng thái của P. Có FR.animate thì chạy hoạt ảnh (hủy được như các bước SGK);
@@ -500,33 +510,66 @@ export function mountLab(root, L){
     syncFree(); freeCaption();
     if (!keepMsg) el('freeMsg').textContent = '';
   }
+  // Bảng điều chỉnh: mỗi nhóm (FR.groups) là một thẻ gập/mở được; thẻ nào đang mở thì nhớ trên máy này.
+  // Chữ trên nút dùng p.short / o.short cho gọn; trợ lý AI vẫn nhận p.label / o.label đầy đủ.
+  const PANEL_KEY = 'khtn-lab-panel-v1';
+  function loadOpen(){ try { return JSON.parse(localStorage.getItem(PANEL_KEY) || '{}')[L.id] || {}; } catch { return {}; } }
+  function saveOpen(){
+    try {
+      const all = JSON.parse(localStorage.getItem(PANEL_KEY) || '{}');
+      all[L.id] = Object.fromEntries([...el('freeCtl').querySelectorAll('.fgroup')].map(d => [d.dataset.group, d.open]));
+      localStorage.setItem(PANEL_KEY, JSON.stringify(all));
+    } catch {}
+  }
+  function paramRow(p){
+    const row = document.createElement('div'); row.className = 'fc fc-' + p.type; row.dataset.key = p.key;
+    const id = 'fc-' + p.key, name = esc(p.short || p.label);
+    if (p.type === 'range'){
+      row.innerHTML = `<div class="fc-head"><label for="${id}">${name}</label><output class="fc-val" for="${id}"></output></div><input type="range" id="${id}" min="${p.min}" max="${p.max}" step="${p.step}">`;
+      row.querySelector('input').addEventListener('input', e => setParams({ [p.key]: e.target.value }));
+    } else if (p.type === 'choice'){
+      row.innerHTML = `<div class="fc-seg" role="group" aria-label="${esc(p.label)}">` +
+        p.options.map(o => `<button type="button" data-v="${esc(o.value)}" title="${esc(o.label)}">${esc(o.short || o.label)}</button>`).join('') + '</div>';
+      row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setParams({ [p.key]: b.dataset.v })));
+    } else {
+      row.innerHTML = `<label class="fc-tog" for="${id}"><span>${name}</span><input type="checkbox" role="switch" id="${id}"></label>`;
+      row.querySelector('input').addEventListener('change', e => setParams({ [p.key]: e.target.checked }));
+    }
+    return row;
+  }
+  function actionBtn(a){
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pbtn fc-act'; b.textContent = a.label;
+    b.addEventListener('click', () => { const r = a.run(S, P) || {}; if (r.patch) setParams(r.patch, true); el('freeMsg').textContent = r.msg || ''; });
+    return b;
+  }
+  function updateAllBtn(){
+    const anyOpen = [...el('freeCtl').querySelectorAll('.fgroup:not([hidden])')].some(d => d.open);
+    el('freeAll').textContent = anyOpen ? 'Thu gọn hết' : 'Mở hết';
+  }
   function buildFree(){
-    const box = el('freeCtl'); let group = null;
-    FR.params.forEach(p => {
-      if (p.group && p.group !== group){
-        const h = document.createElement('p'); h.className = 'fc-group'; h.dataset.key = p.key; h.textContent = p.group; box.appendChild(h);
-      }
-      group = p.group;
-      const row = document.createElement('div'); row.className = 'fc'; row.dataset.key = p.key;
-      const id = 'fc-' + p.key;
-      if (p.type === 'range'){
-        row.innerHTML = `<div class="fc-head"><label for="${id}">${esc(p.label)}</label><output for="${id}"></output></div><input type="range" id="${id}" min="${p.min}" max="${p.max}" step="${p.step}">`;
-        row.querySelector('input').addEventListener('input', e => setParams({ [p.key]: e.target.value }));
-      } else if (p.type === 'choice'){
-        row.innerHTML = `<div class="fc-head"><span>${esc(p.label)}</span></div><div class="fc-seg" role="group" aria-label="${esc(p.label)}">` +
-          p.options.map(o => `<button type="button" data-v="${esc(o.value)}">${esc(o.label)}</button>`).join('') + '</div>';
-        row.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setParams({ [p.key]: b.dataset.v })));
-      } else {
-        row.innerHTML = `<label class="fc-tog"><input type="checkbox" id="${id}">${esc(p.label)}</label>`;
-        row.querySelector('input').addEventListener('change', e => setParams({ [p.key]: e.target.checked }));
-      }
-      box.appendChild(row);
+    const box = el('freeCtl'), saved = loadOpen();
+    FR.groups = FR.groups || [];
+    FR.params.filter(p => !p.group).forEach(p => box.appendChild(paramRow(p)));
+    FR.groups.forEach(gr => {
+      const d = document.createElement('details'); d.className = 'fgroup'; d.dataset.group = gr.id;
+      d.open = gr.id in saved ? saved[gr.id] : gr.open !== false;
+      d.innerHTML = `<summary class="fg-head"><span class="fg-icon" aria-hidden="true">${gr.icon || ''}</span>` +
+        `<span class="fg-text"><span class="fg-title">${esc(gr.title)}</span><span class="fg-sum"></span></span>` +
+        `<svg class="fg-chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></summary><div class="fg-body"></div>`;
+      const body = d.querySelector('.fg-body');
+      FR.params.filter(p => p.group === gr.id).forEach(p => body.appendChild(paramRow(p)));
+      const acts = (FR.actions || []).filter(a => a.group === gr.id);
+      acts.forEach(a => body.appendChild(actionBtn(a)));
+      if (acts.length) body.appendChild(el('freeMsg'));   // lời nhắn hiện ngay dưới nút vừa bấm
+      d.addEventListener('toggle', () => { saveOpen(); updateAllBtn(); });
+      box.appendChild(d);
     });
-    (FR.actions || []).forEach(a => {
-      const b = document.createElement('button'); b.type = 'button'; b.className = 'pbtn'; b.textContent = a.label;
-      b.addEventListener('click', () => { const r = a.run(S, P) || {}; if (r.patch) setParams(r.patch, true); el('freeMsg').textContent = r.msg || ''; });
-      el('freeActs').appendChild(b);
+    (FR.actions || []).filter(a => !a.group).forEach(a => el('freeActs').appendChild(actionBtn(a)));
+    el('freeAll').addEventListener('click', () => {
+      const ds = [...box.querySelectorAll('.fgroup:not([hidden])')], open = !ds.some(d => d.open);
+      ds.forEach(d => { d.open = open; });
     });
+    syncFree(); updateAllBtn();
   }
   function setMode(free){
     if (!FR || free === freeOn) return;
@@ -535,8 +578,36 @@ export function mountLab(root, L){
     el('stepsBox').hidden = free; el('freeBox').hidden = !free;
     ['btnPlay', 'btnPrev', 'btnNext', 'askWrap'].forEach(k => { el(k).hidden = free; });
     root.querySelectorAll('[data-mode]').forEach(b => b.setAttribute('aria-pressed', String((b.dataset.mode === 'free') === free)));
-    if (free){ L.base(S); if (FR.start) FR.start(S); setParams({}); } else reset();
-    renderChips(); updateNav();
+    if (free){ L.base(S); if (FR.start) FR.start(S); S.sel = selKey = null; setParams({}); } else reset();
+    placePanel(); renderChips(); updateNav();
+  }
+  // Bàn phím / bút trình chiếu ở chế độ tự do: ←/→ (PageUp/PageDown) dịch dụng cụ đang chọn, ↑/↓ chọn dụng cụ khác
+  let selKey = null;
+  function freeKey(e){
+    if (!FR || !FR.drag || !FR.drag.nudge) return;
+    const dir = (e.key === 'ArrowRight' || e.key === 'PageDown') ? 1 : (e.key === 'ArrowLeft' || e.key === 'PageUp') ? -1 : 0;
+    const cyc = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0;
+    if (!dir && !cyc) return;
+    const items = FR.drag.items(P); if (!items.length) return;
+    e.preventDefault();
+    let i = items.indexOf(selKey);
+    if (i < 0) i = 0; else if (cyc) i = (i + cyc + items.length) % items.length;
+    S.sel = selKey = items[i];
+    if (dir) setParams(FR.drag.nudge(selKey, dir, P));
+  }
+  // Toàn màn hình chỉ còn sân khấu: bảng điều chỉnh chuyển thành bảng nổi, mở bằng nút trên sân khấu
+  function placePanel(){
+    if (!FR) return;
+    const lab = el('lab'), stage = lab.querySelector('.stage'), box = el('freeBox'), btn = el('fsPanelBtn');
+    const fs = document.fullscreenElement === lab && freeOn;
+    btn.hidden = !fs;
+    if (fs){
+      if (box.parentElement !== stage) stage.appendChild(box);   // nằm trong sân khấu: không che dòng chú thích
+      box.classList.add('float'); box.hidden = btn.getAttribute('aria-expanded') !== 'true';
+    } else {
+      if (box.parentElement === stage) el('stepsBox').after(box);
+      box.classList.remove('float'); box.hidden = !freeOn; btn.setAttribute('aria-expanded', 'false');
+    }
   }
   if (FR){
     // kéo dụng cụ trên giá: đổi tọa độ chuột sang đơn vị cảnh, module quyết định kéo cái gì
@@ -546,6 +617,7 @@ export function mountLab(root, L){
       if (!freeOn) return;
       const p = toScene(e); dragKey = FR.drag.hit(S, P, p.x, p.y, tol());
       if (!dragKey) return;
+      S.sel = selKey = dragKey;   // bấm vào dụng cụ nào thì phím ←/→ dịch dụng cụ đó
       e.preventDefault(); canvas.setPointerCapture(e.pointerId); canvas.style.cursor = 'grabbing';
     });
     canvas.addEventListener('pointermove', e => {
@@ -557,6 +629,10 @@ export function mountLab(root, L){
     const endDrag = () => { if (dragKey){ dragKey = null; canvas.style.cursor = ''; } };
     canvas.addEventListener('pointerup', endDrag); canvas.addEventListener('pointercancel', endDrag);
     root.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode === 'free')));
+    el('fsPanelBtn').addEventListener('click', () => {
+      const open = el('fsPanelBtn').getAttribute('aria-expanded') !== 'true';
+      el('fsPanelBtn').setAttribute('aria-expanded', String(open)); el('freeBox').hidden = !open;
+    });
     buildFree();
   }
 

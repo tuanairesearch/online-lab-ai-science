@@ -3,7 +3,7 @@
 
 import { esc } from '../engine.js';
 import { SUBJECTS, LESSONS } from '../catalog.js';
-import { SUBJECT_ART } from '../art.js';
+import { SUBJECT_ART, LESSON_ART, animateOnHover } from '../art.js';
 
 const GRADES = [6, 7, 8, 9];
 const TABS = [...GRADES, 0];   // 0 = Tất cả
@@ -32,7 +32,8 @@ function lessonCard(l){
   const ready = l.status === 'ready';
   const tags = (ready && l.ai ? '<span class="tag ai"><i></i>Có câu hỏi AI</span>' : '') +
                (ready ? '' : '<span class="tag soon">Đang soạn</span>');
-  const inner = `<span class="meta">KHTN ${esc(l.grade)} · ${esc(l.lesson)}</span><h3>${esc(l.title)}</h3>` +
+  const art = LESSON_ART[l.id] ? `<div class="subj-art lcard-art">${LESSON_ART[l.id]}</div>` : '';
+  const inner = art + `<span class="meta">KHTN ${esc(l.grade)} · ${esc(l.lesson)}</span><h3>${esc(l.title)}</h3>` +
     (l.desc ? `<p>${esc(l.desc)}</p>` : '') + (tags ? `<span class="tags">${tags}</span>` : '');
   return ready
     ? `<li><a class="lcard" href="${esc(l.href)}">${inner}</a></li>`
@@ -90,6 +91,7 @@ function mount(){
       panel.innerHTML = GRADES.filter(x => list.some(l => l.grade === x))
         .map(x => `<section class="lgroup" aria-label="Lớp ${x}"><h2>Lớp ${x}</h2>${grid(list.filter(l => l.grade === x))}</section>`).join('');
     }
+    animateOnHover([...panel.querySelectorAll('a.lcard')]);
   }
   function select(g, focus){
     history.replaceState(null, '', g ? '#lop-' + g : location.pathname);

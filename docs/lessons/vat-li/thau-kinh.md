@@ -33,11 +33,12 @@
 
 ## Chế độ tự do (đã dựng, giáo viên duyệt lại)
 Học sinh tự lắp thí nghiệm, không theo bước SGK. Không có câu hỏi mồi, không ghi số liệu.
+Khi vào chế độ tự do hoặc bấm "Làm lại": giá quang học trống (không thấu kính, không nguồn sáng, không màn chắn).
 
 | Thông số | Giá trị |
 |---|---|
-| Thấu kính | Hội tụ (rìa mỏng) / Phân kì (rìa dày) / Không đặt (ánh sáng truyền thẳng, không tạo ảnh) |
-| Tiêu cự f | 5–15 cm (bước 1 cm) |
+| Dụng cụ trên giá | Thấu kính hội tụ (rìa mỏng) / Thấu kính phân kì (rìa dày) / Gương phẳng / Không đặt (ánh sáng truyền thẳng, không tạo ảnh) |
+| Tiêu cự f | 5–15 cm (bước 1 cm), chỉ với thấu kính |
 | Nguồn sáng | Vật sáng AB / Đèn chiếu chùm tia song song với trục chính / Không có |
 | Vật cách thấu kính d | 2–36 cm (bước 0,5 cm), kéo được trên giá |
 | Chiều cao vật h | 1–6 cm |
@@ -47,6 +48,10 @@ Học sinh tự lắp thí nghiệm, không theo bước SGK. Không có câu h�
 | Tia sáng đặc biệt | tia song song với trục chính; tia qua quang tâm O; tia qua tiêu điểm F (với thấu kính phân kì: tia hướng tới F'), mỗi tia bật/tắt riêng |
 
 - Ảnh tính bằng công thức thấu kính mỏng (như trên). Dòng "Quan sát" phân loại vị trí vật: ngoài 2f / đúng 2f / giữa f và 2f / tại F / trong khoảng tiêu cự (thấu kính hội tụ); thấu kính phân kì luôn cho ảnh ảo, cùng chiều, nhỏ hơn vật.
+- **Gương phẳng** (kiến thức KHTN 7, đặt ở vạch 0, mặt phản xạ quay về phía vật; để so sánh phản xạ với khúc xạ):
+  - Vật sáng AB: ảnh ảo, cùng chiều, bằng vật, nằm sau gương, cách gương đúng bằng khoảng cách từ vật tới gương (đối xứng với vật qua gương), vẽ nét đứt. Vẽ 2 tia từ B tới gương, phản xạ ngược lại (góc phản xạ bằng góc tới); đường kéo dài của tia phản xạ (nét đứt) gặp nhau tại B'.
+  - Đèn chiếu: chùm tia bị hắt ngược về phía đèn, không đi qua gương.
+  - Màn chắn (đặt sau gương) không nhận được ánh sáng, không hứng được ảnh. Ẩn tiêu cự, tiêu điểm và 3 tia sáng đặc biệt.
 - Vật đặt đúng tại F: các tia ló song song, không tạo ảnh.
 - Chùm song song + màn: vệt sáng rộng 8·|1 − s/f| cm (chùm rộng 8 cm); dưới 0,35 cm thì gọi là "điểm sáng" (màn ở F').
 - Nút "Tìm ảnh rõ nét trên màn": dịch màn tới ảnh thật (hoặc tới F' khi dùng chùm song song); ảnh ảo / ảnh quá 36 cm / vật tại F thì giải thích vì sao không hứng được.
