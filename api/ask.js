@@ -2,7 +2,13 @@
 // Nhận câu hỏi của học sinh + trạng thái thí nghiệm, gọi Gemini, trả về { text }.
 // API key nằm trong biến môi trường GEMINI_API_KEY, không bao giờ gửi xuống trình duyệt.
 
-const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+// Model chính: bản Lite trả lời nhanh (~1 giây) và ít bị quá tải hơn bản Flash
+const MODEL = process.env.GEMINI_MODEL || 'gemini-flash-lite-latest';
+// Model dự phòng: dùng khi model chính quá tải (503), hết lượt (429) hoặc trả lời quá chậm
+const FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL || 'gemini-flash-latest';
+const MODELS = [...new Set([MODEL, FALLBACK_MODEL].filter(Boolean))];
+const FIRST_TRY_MS = 12000;     // chờ model chính tối đa bấy lâu rồi chuyển sang model dự phòng
+const TOTAL_MS = 25000;         // tổng thời gian chờ (hàm Vercel bị cắt ở 30 giây)
 const ENDPOINT = (m) => `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:generateContent`;
 
 const MAX_MSG_CHARS = 600;      // độ dài tối đa mỗi tin nhắn
@@ -91,29 +97,45 @@ export default async function handler(req, res){
     generationConfig: { temperature: 0.4, maxOutputTokens: 1024 }
   };
 
+  const deadline = Date.now() + TOTAL_MS;
+  let lastStatus = 502;
+  for (let i = 0; i < MODELS.length; i++){
+    const left = deadline - Date.now();
+    if (left < 2000) break;
+    const isLast = i === MODELS.length - 1;
+    const r = await callGemini(MODELS[i], key, payload, isLast ? left : Math.min(FIRST_TRY_MS, left));
+    if (r.text !== undefined){
+      const text = r.text || 'Mình chưa trả lời được câu này. Em thử hỏi cách khác, hoặc hỏi thầy cô nhé.';
+      return res.status(200).json({ text });
+    }
+    lastStatus = r.status;
+  }
+  return res.status(lastStatus === 429 ? 429 : lastStatus === 504 ? 504 : 502)
+    .json({ error: lastStatus === 429 ? 'rate_limited' : 'upstream_error' });
+}
+
+// Gọi một model. Trả về { text } nếu thành công, { status } nếu lỗi (để thử model khác).
+async function callGemini(model, key, payload, timeoutMs){
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 25000);
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
   try {
-    const r = await fetch(ENDPOINT(MODEL), {
+    const r = await fetch(ENDPOINT(model), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify(payload),
       signal: ctl.signal
     });
-    if (r.status === 429) return res.status(429).json({ error: 'rate_limited' });
     if (!r.ok){
       const detail = await r.text().catch(() => '');
-      console.error('Gemini error', r.status, detail.slice(0, 500));
-      return res.status(502).json({ error: 'upstream_error' });
+      console.error('Gemini error', model, r.status, detail.slice(0, 500));
+      return { status: r.status === 429 ? 429 : 502 };
     }
     const data = await r.json();
     const parts = data?.candidates?.[0]?.content?.parts || [];
-    const text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
-    if (!text) return res.status(200).json({ text: 'Mình chưa trả lời được câu này. Em thử hỏi cách khác, hoặc hỏi thầy cô nhé.' });
-    return res.status(200).json({ text });
+    return { text: parts.filter(p => !p.thought).map(p => p.text || '').join('').trim() };
   } catch (e){
-    console.error('Gemini request failed', e?.name, e?.message);
-    return res.status(e?.name === 'AbortError' ? 504 : 502).json({ error: 'upstream_error' });
+    console.error('Gemini request failed', model, e?.name, e?.message);
+    return { status: e?.name === 'AbortError' ? 504 : 502 };
   } finally {
     clearTimeout(timer);
   }
