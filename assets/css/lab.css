@@ -14,7 +14,7 @@
   --bubble-bg:#FFFFFF; --bubble-ink:#141B24; --bubble-muted:#5A6676; --bubble-line:#E1E6EE; --bubble-user:#EEF1F5;
   --b-ok:#1C7F47; --b-ok-soft:#E3F4EA; --b-bad:#B5412F; --b-bad-soft:#FCE9E5; --b-accent:#3A63E0; --b-accent-soft:#E9EEFD;
   --orb-a:#8A6CFF; --orb-b:#36B9FF; --orb-glow:rgba(124,140,255,.55); --on-accent:#FFFFFF; --on-beam:#1C1500;
-  /* màu nhận diện từng môn */
+  /* màu nhận diện từng phần */
   --vat-li:#2D5BD8; --vat-li-soft:#E7EDFC; --hoa-hoc:#C2410C; --hoa-hoc-soft:#FCEBE2; --sinh-hoc:#1B7F45; --sinh-hoc-soft:#E2F3E9;
   --f-display:"Lexend","Be Vietnam Pro",system-ui,sans-serif;
   --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -242,7 +242,7 @@ table.stats{border-collapse:collapse;width:100%;font-size:14px}
 .howto{margin:0;padding-left:18px;display:grid;gap:7px;font-size:14.5px}
 kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;background:var(--bg)}
 
-/* ---------- trang chủ: 3 thẻ môn (cả thẻ bấm được, link bài nằm nổi bên trên) ---------- */
+/* ---------- trang chủ: 3 thẻ phần (cả thẻ bấm được, link bài nằm nổi bên trên) ---------- */
 .home-section{display:grid;gap:14px}
 .subjects{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
 .subj{position:relative;display:grid;grid-template-rows:auto 1fr;min-width:0;background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:16px;overflow:hidden;transition:border-color .15s,transform .15s}
@@ -253,8 +253,8 @@ kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border
 .subj-art{background:var(--stage)}
 .subj-art svg{display:block;width:100%;aspect-ratio:2/1}
 
-/* hình minh họa môn: đứng yên; chuyển động khi khung chứa có lớp .live
-   (rê chuột / chọn bằng phím vào thẻ, thẻ hiện trên màn hình cảm ứng, đầu trang môn) */
+/* hình minh họa phần: đứng yên; chuyển động khi khung chứa có lớp .live
+   (rê chuột / chọn bằng phím vào thẻ, thẻ hiện trên màn hình cảm ứng, đầu trang phần) */
 .c-sw{transform-box:view-box;transform-origin:170px 66px;transform:rotate(35deg);transition:transform .25s ease}
 .live .c-sw{transform:rotate(0)}
 .c-flow{opacity:0;transition:opacity .2s}
@@ -320,6 +320,13 @@ kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border
 .live .tr-powder{opacity:.15;transition:opacity 1s ease-out .2s}
 .tr-curve{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .4s}
 .live .tr-curve{stroke-dashoffset:0;transition:stroke-dashoffset var(--t) ease-out .2s}
+/* đo tốc độ – xe lăn nhanh dần từ vạch xuất phát tới vạch đích, kim đồng hồ bấm giây quay trong lúc xe chạy */
+.ts-car{transition:transform .3s}
+.live .ts-car{animation:tsdrive 2.6s infinite}
+@keyframes tsdrive{0%,10%{transform:none;opacity:1;animation-timing-function:cubic-bezier(.55,0,1,.45)}62%,86%{transform:translate(92.4px,23.8px);opacity:1}96%{transform:translate(92.4px,23.8px);opacity:0}100%{transform:none;opacity:0}}
+.ts-hand{transform-box:view-box;transform-origin:170px 32px}
+.live .ts-hand{animation:tshand 2.6s infinite}
+@keyframes tshand{0%,10%{transform:rotate(0);animation-timing-function:linear}62%,94%{transform:rotate(300deg)}100%{transform:rotate(360deg)}}
 /* quang hợp – nắng chiếu lá bịt giấy đen; panh nhúng lá đã tẩy màu vào đĩa iodine, màu ngấm từ mép vào.
    Hình đứng yên (và khi giảm chuyển động) hiện sẵn kết quả: lá nằm trong đĩa, đã ngấm màu, panh ẩn. */
 .qh-sun{fill:var(--stage-muted);transition:fill .3s}
@@ -378,7 +385,7 @@ kbd{font-family:var(--f-mono);font-size:12px;border:1px solid var(--line);border
 .subj-lessons .t{font-weight:600;font-size:15.5px;line-height:1.35}
 .subj-go{font-weight:700;font-size:16px;color:var(--c)}
 
-/* ---------- trang môn: đầu trang theo màu môn, tab lớp, thẻ bài ---------- */
+/* ---------- trang phần: đầu trang theo màu phần, tab lớp, thẻ bài ---------- */
 .crumbs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14.5px;color:var(--muted)}
 .crumbs a{font-weight:600;text-decoration:none}
 .crumbs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}

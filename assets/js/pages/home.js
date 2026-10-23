@@ -1,4 +1,4 @@
-// Trang chủ: 3 thẻ môn Vật lí / Hóa học / Sinh học, dựng từ catalog.
+// Trang chủ: 3 thẻ phần Vật lí / Hóa học / Sinh học, dựng từ catalog.
 
 import { esc } from '../engine.js';
 import { SUBJECTS, LESSONS } from '../catalog.js';
@@ -21,7 +21,7 @@ function subjectCard(s){
       <p class="subj-tag">${esc(s.topic)}</p>
       ${count}
       ${featured ? `<ul class="subj-lessons" aria-label="Thí nghiệm tiêu biểu">${featured}</ul>` : ''}
-      <span class="subj-go" aria-hidden="true">Vào môn ${esc(s.name)} →</span>
+      <span class="subj-go" aria-hidden="true">Vào phần ${esc(s.name)} →</span>
     </div>
   </article>`;
 }

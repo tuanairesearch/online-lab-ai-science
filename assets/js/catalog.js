@@ -1,9 +1,9 @@
-// Danh mục môn và bài thí nghiệm. Trang chủ dựng từ file này.
+// Danh mục phần và bài thí nghiệm. Trang chủ dựng từ file này.
 // Thêm bài mới: thêm một dòng vào LESSONS.
 //   status: 'ready' = đã có module chạy được; 'planned' = đang soạn
 //   grade: số lớp (6–9), dùng để lọc theo lớp
 //   ai: true nếu bài có câu hỏi mồi (hiện nhãn "Có câu hỏi AI")
-//   href: /<môn>/<bài>, mở bằng lab.html (rewrites trong vercel.json, serve.json)
+//   href: /<phần>/<bài>, mở bằng lab.html (rewrites trong vercel.json, serve.json)
 
 export const SUBJECTS = [
   { id: 'vat-li',   name: 'Vật lí',   topic: 'Năng lượng và sự biến đổi' },
@@ -19,6 +19,14 @@ export const LESSONS = [
     status: 'ready', ai: true,
     href: '/vat-li/thau-kinh',
     module: '/assets/js/lessons/thau-kinh.js'
+  },
+  {
+    id: 'do-toc-do', subject: 'vat-li', grade: 7, lesson: 'Bài 9',
+    title: 'Đo tốc độ',
+    desc: 'Đo tốc độ xe đồ chơi bằng đồng hồ bấm giây, viên bi bằng cổng quang điện, và thiết bị bắn tốc độ. 8 bước, 4 câu hỏi mồi.',
+    status: 'ready', ai: true,
+    href: '/vat-li/do-toc-do',
+    module: '/assets/js/lessons/do-toc-do.js'
   },
   {
     id: 'toc-do-phan-ung', subject: 'hoa-hoc', grade: 8, lesson: 'Bài 7',

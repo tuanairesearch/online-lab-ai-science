@@ -1,6 +1,6 @@
-// Hình minh họa SVG cho từng môn (thẻ môn ở trang chủ, đầu trang môn) và từng thí nghiệm (thẻ bài ở trang môn).
+// Hình minh họa SVG cho từng phần (thẻ phần ở trang chủ, đầu trang phần) và từng thí nghiệm (thẻ bài ở trang phần).
 // Vẽ trên nền sân khấu tối, màu lấy từ biến CSS.
-// Hình đứng yên; khi khung chứa có lớp .live thì chuyển động (xem lab.css, mục "hình minh họa môn").
+// Hình đứng yên; khi khung chứa có lớp .live thì chuyển động (xem lab.css, mục "hình minh họa phần").
 
 // Mạch điện: dây đi từ cực + của pin (trên) → đèn → công tắc → về cực − (dưới),
 // nên chấm sáng chạy theo đúng chiều quy ước của dòng điện.
@@ -34,7 +34,7 @@ export function animateOnHover(els){
   });
 }
 
-/* ---------- hình minh họa từng thí nghiệm (thẻ bài ở trang môn), theo id trong catalog ---------- */
+/* ---------- hình minh họa từng thí nghiệm (thẻ bài ở trang phần), theo id trong catalog ---------- */
 // Thấu kính: ba tia song song từ đèn qua thấu kính hội tụ, gặp nhau tại F' rồi đi tiếp.
 const lensRays = [34, 50, 66].map((y0, i) => {
   const d = `M18 ${y0} H100 L140 50 L190 ${50 + (50 - y0) * 50 / 40}`;
@@ -67,6 +67,15 @@ function leafD(cx, by, s){
 }
 const powder = cx =>Array.from({ length: 14 }, (_, i) => `<circle cx="${(cx - 11 + i * 1.7).toFixed(1)}" cy="${90 - (i * 7 % 3)}" r="1"/>`).join('');
 
+// Đo tốc độ: tấm gỗ kê sách, xe đồ chơi ở vạch xuất phát, đồng hồ bấm giây.
+// Khi chuyển động: xe lăn nhanh dần tới vạch đích, kim đồng hồ quay đúng trong lúc xe chạy.
+const SLOPE = { ax: 20, ay: 50, bx: 160, by: 86 };
+const slopeAt = t => [SLOPE.ax + (SLOPE.bx - SLOPE.ax) * t, SLOPE.ay + (SLOPE.by - SLOPE.ay) * t];
+const SLOPE_DEG = Math.atan2(SLOPE.by - SLOPE.ay, SLOPE.bx - SLOPE.ax) * 180 / Math.PI;
+const SLOPE_N = (() => { const dx = SLOPE.bx - SLOPE.ax, dy = SLOPE.by - SLOPE.ay, l = Math.hypot(dx, dy); return [dy / l, -dx / l]; })();   // pháp tuyến hướng lên
+const [S0x, S0y] = slopeAt(0.12), [S1x, S1y] = slopeAt(0.78);
+const off = (x, y, k) => `${(x + SLOPE_N[0] * k).toFixed(1)} ${(y + SLOPE_N[1] * k).toFixed(1)}`;
+
 export const LESSON_ART = {
   'thau-kinh': `<svg viewBox="0 0 200 100" role="img" aria-label="Ba tia sáng song song qua thấu kính hội tụ gặp nhau tại tiêu điểm">
     <line x1="8" y1="50" x2="196" y2="50" stroke="var(--stage-muted)" stroke-width="1" stroke-dasharray="4 4" opacity=".7"/>
@@ -87,6 +96,26 @@ export const LESSON_ART = {
     <line x1="140" y1="28" x2="194" y2="28" stroke="var(--img)" stroke-width="1" stroke-dasharray="3 3"/>
     <path class="tr-curve" d="M140 86 C150 40, 158 30, 194 29" pathLength="1" style="--t:1s" fill="none" stroke="var(--obj)" stroke-width="2.2" stroke-linecap="round"/>
     <path class="tr-curve" d="M140 86 C165 72, 182 54, 194 46" pathLength="1" style="--t:2.6s" fill="none" stroke="var(--glass)" stroke-width="2.2" stroke-linecap="round"/>
+  </svg>`,
+  'do-toc-do': `<svg viewBox="0 0 200 100" role="img" aria-label="Xe đồ chơi lăn xuống tấm gỗ kê trên sách, qua vạch xuất phát và vạch đích; bên cạnh là đồng hồ bấm giây">
+    <line x1="4" y1="92" x2="196" y2="92" stroke="var(--stage-line)" stroke-width="2"/>
+    <g stroke="var(--stage)" stroke-width="1"><rect x="6" y="80" width="24" height="12" rx="1.5" fill="var(--spec-5)"/><rect x="8" y="68" width="24" height="12" rx="1.5" fill="var(--spec-1)"/><rect x="6" y="56" width="24" height="12" rx="1.5" fill="var(--spec-4)"/></g>
+    <path d="M${SLOPE.ax} ${SLOPE.ay} L${SLOPE.bx} ${SLOPE.by} L${SLOPE.bx} ${SLOPE.by + 5} L${SLOPE.ax} ${SLOPE.ay + 5} Z" fill="var(--stage-2)" stroke="var(--stage-muted)" stroke-width="1"/>
+    <line x1="${SLOPE.ax}" y1="${SLOPE.ay}" x2="${SLOPE.bx}" y2="${SLOPE.by}" stroke="var(--pot)" stroke-width="2.4"/>
+    <g stroke="var(--beam)" stroke-width="1.4" stroke-dasharray="2.5 2.5"><path d="M${off(S0x, S0y, 0)} L${off(S0x, S0y, 22)}"/><path d="M${off(S1x, S1y, 0)} L${off(S1x, S1y, 22)}"/></g>
+    <path d="M${off(S0x, S0y, 18)} L${off(S1x, S1y, 18)}" stroke="var(--glass)" stroke-width="1.6"/>
+    <text x="${(S0x + S1x) / 2 + SLOPE_N[0] * 23}" y="${(S0y + S1y) / 2 + SLOPE_N[1] * 23}" fill="var(--glass)" font-size="10" font-weight="700" text-anchor="middle" font-family="system-ui, sans-serif">s</text>
+    <g class="ts-car"><g transform="translate(${S0x.toFixed(1)} ${S0y.toFixed(1)}) rotate(${SLOPE_DEG.toFixed(2)})">
+      <rect x="-18" y="-9" width="18" height="6" rx="2" fill="var(--obj)"/>
+      <path d="M-13.5 -9 L-11.5 -13 H-6 L-4 -9 Z" fill="var(--obj)"/>
+      <circle cx="-14" cy="-2.5" r="2.5" fill="var(--stage-ink)"/><circle cx="-4" cy="-2.5" r="2.5" fill="var(--stage-ink)"/>
+    </g></g>
+    <rect x="166" y="9" width="8" height="5" rx="1.5" fill="var(--stage-muted)"/>
+    <circle cx="170" cy="32" r="18" fill="var(--stage-2)" stroke="var(--img)" stroke-width="2"/>
+    <g stroke="var(--stage-muted)" stroke-width="1.2">${Array.from({ length: 12 }, (_, i) => { const a = i * Math.PI / 6, c = Math.cos(a), si = Math.sin(a);
+      return `<line x1="${(170 + 14 * c).toFixed(1)}" y1="${(32 + 14 * si).toFixed(1)}" x2="${(170 + 16 * c).toFixed(1)}" y2="${(32 + 16 * si).toFixed(1)}"/>`; }).join('')}</g>
+    <line class="ts-hand" x1="170" y1="32" x2="170" y2="19" stroke="var(--img)" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="170" cy="32" r="2" fill="var(--img)"/>
   </svg>`,
   'quang-hop': `<svg viewBox="0 0 200 100" role="img" aria-label="Lá khoai lang bịt một dải giấy đen; sau khi nhúng vào dung dịch iodine, phần không bịt xanh tím, phần bịt không có màu xanh tím">
     <defs>

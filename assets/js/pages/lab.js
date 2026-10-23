@@ -1,4 +1,4 @@
-// Trang thí nghiệm: đọc URL /<môn>/<bài> → tìm bài trong catalog → import động module bài → mountLab().
+// Trang thí nghiệm: đọc URL /<phần>/<bài> → tìm bài trong catalog → import động module bài → mountLab().
 
 import { mountLab, esc } from '../engine.js';
 import { SUBJECTS, LESSONS } from '../catalog.js';
@@ -14,7 +14,7 @@ function notFound(){
   <div class="wrap">
     <header class="page"><a class="home-link" href="${back}">← ${subject ? esc(subject.name) : 'Trang chủ'}</a><h1>Không tìm thấy thí nghiệm</h1></header>
     <p>Thí nghiệm này không có hoặc đang soạn.</p>
-    <p><a class="pbtn" href="${back}">${subject ? 'Về môn ' + esc(subject.name) : 'Về trang chủ'}</a></p>
+    <p><a class="pbtn" href="${back}">${subject ? 'Về phần ' + esc(subject.name) : 'Về trang chủ'}</a></p>
   </div>`;
   document.title = 'Không tìm thấy · Phòng thí nghiệm KHTN';
 }
@@ -23,7 +23,7 @@ if (!entry) notFound();
 else {
   try {
     const { default: lesson } = await import(entry.module);
-    // nút quay lại trên trang thí nghiệm dẫn về trang môn
+    // nút quay lại trên trang thí nghiệm dẫn về trang phần
     lesson.subject = subject.id;
     lesson.subjectName = subject.name;
     const desc = document.querySelector('meta[name="description"]');

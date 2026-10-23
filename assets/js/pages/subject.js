@@ -1,4 +1,4 @@
-// Trang một môn (/vat-li, /hoa-hoc, /sinh-hoc): danh sách bài theo lớp 6–9, dựng từ catalog.
+// Trang một phần (/vat-li, /hoa-hoc, /sinh-hoc): danh sách bài theo lớp 6–9, dựng từ catalog.
 // Tab đang chọn ghi trên URL (#lop-7) để tải lại trang vẫn giữ đúng lớp.
 
 import { esc } from '../engine.js';
@@ -16,13 +16,13 @@ const subject = SUBJECTS.find(s => s.id === slug);
 const lessonNo = l => parseInt(String(l.lesson).replace(/\D+/g, ''), 10) || 0;
 
 function notFound(){
-  document.title = `Không tìm thấy môn học · ${SITE}`;
+  document.title = `Không tìm thấy phần học · ${SITE}`;
   app.innerHTML = `
 <div class="wrap">
   <header class="page">
     <a class="home-link" href="/">← Trang chủ</a>
-    <h1>Không tìm thấy môn học</h1>
-    <p class="lead">Đường dẫn này không ứng với môn nào. Em quay lại trang chủ để chọn Vật lí, Hóa học hoặc Sinh học nhé.</p>
+    <h1>Không tìm thấy phần học</h1>
+    <p class="lead">Đường dẫn này không ứng với phần nào. Em quay lại trang chủ để chọn Vật lí, Hóa học hoặc Sinh học nhé.</p>
   </header>
   <p><a class="pbtn" href="/">Về trang chủ</a></p>
 </div>`;
@@ -84,7 +84,7 @@ function mount(){
     panel.setAttribute('aria-labelledby', 'tab-' + g);
     const list = g ? lessons.filter(l => l.grade === g) : lessons;
     if (!list.length){
-      panel.innerHTML = `<p class="empty-note">${g ? `Môn ${esc(subject.name)} chưa có thí nghiệm lớp ${g}.` : `Môn ${esc(subject.name)} chưa có thí nghiệm nào.`} Các bài mới sẽ được thêm dần.</p>`;
+      panel.innerHTML = `<p class="empty-note">${g ? `Phần ${esc(subject.name)} chưa có thí nghiệm lớp ${g}.` : `Phần ${esc(subject.name)} chưa có thí nghiệm nào.`} Các bài mới sẽ được thêm dần.</p>`;
     } else if (g){
       panel.innerHTML = grid(list);
     } else {

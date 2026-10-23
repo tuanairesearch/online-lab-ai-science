@@ -18,19 +18,20 @@ Web mô phỏng thí nghiệm môn **Khoa học tự nhiên THCS** (bộ SGK *K�
 6. **Hợp chiếu tivi**: chữ to, tương phản cao, sân khấu thí nghiệm luôn nền tối; điều khiển được bằng bút trình chiếu (phím ←/→, PageUp/PageDown) và phím A–D để chọn đáp án.
 7. **Hợp điện thoại** (học sinh xem ở nhà): không cuộn ngang, hộp thoại AI thành bảng trượt dưới đáy màn hình.
 8. Tôn trọng `prefers-reduced-motion`. Mọi màu lấy từ biến CSS trong `assets/css/lab.css`.
+9. **Thuật ngữ**: KHTN là một môn; Vật lí, Hóa học, Sinh học gọi là 'phần', không gọi là 'môn'.
 
 ## 3. Cấu trúc thư mục (mục tiêu)
 ```
-index.html                     Trang chủ: 3 thẻ môn Vật lí / Hóa học / Sinh học
-subject.html                   Trang một môn: danh sách bài theo lớp 6–9 (URL: /vat-li, /hoa-hoc, /sinh-hoc)
+index.html                     Trang chủ: 3 thẻ phần Vật lí / Hóa học / Sinh học
+subject.html                   Trang một phần: danh sách bài theo lớp 6–9 (URL: /vat-li, /hoa-hoc, /sinh-hoc)
 lab.html                       Trang thí nghiệm, nạp module theo URL (/vat-li/thau-kinh)
 api/ask.js                     Serverless: nhận câu hỏi + trạng thái thí nghiệm → Gemini → { text }
 assets/css/lab.css             Giao diện dùng chung (biến màu, sân khấu, hộp thoại AI…)
-assets/js/catalog.js           Danh mục: SUBJECTS và LESSONS (id, môn, lớp, bài, trạng thái, ai, đường dẫn module)
-assets/js/art.js               Hình minh họa SVG của 3 môn (trang chủ, đầu trang môn)
+assets/js/catalog.js           Danh mục: SUBJECTS và LESSONS (id, phần, lớp, bài, trạng thái, ai, đường dẫn module)
+assets/js/art.js               Hình minh họa SVG của 3 phần (trang chủ, đầu trang phần)
 assets/js/engine.js            Lõi: chạy bước, hỏi mồi, chat AI, số liệu, công cụ vẽ canvas
 assets/js/pages/home.js        Dựng trang chủ từ catalog
-assets/js/pages/subject.js     Dựng trang môn từ catalog
+assets/js/pages/subject.js     Dựng trang phần từ catalog
 assets/js/pages/lab.js         Đọc URL → import động module bài → mountLab()
 assets/js/lessons/<mon>/<bai>.js   Mỗi thí nghiệm một module (mon: vat-li | hoa-hoc | sinh-hoc)
 docs/lessons/<mon>/<bai>.md    Đặc tả bài do giáo viên viết (nguồn sự thật về nội dung)
